@@ -55,7 +55,7 @@ export const menuGroups: NavGroup[] = [
         children: [
           { id: "electronic-categories", label: "Categories", href: "/dashboard/catalog/electronic-categories" },
           { id: "electronic-brands", label: "Brands", href: "/dashboard/catalog/electronic-brands" },
-          { id: "electronic-types", label: "Types", href: "/dashboard/catalog/electronic-types" },
+          { id: "electronic-types", label: "Series", href: "/dashboard/catalog/electronic-types" },
         ],
       },
     ],
@@ -85,6 +85,7 @@ export const menuGroups: NavGroup[] = [
       { id: "users", label: "Customers & staff", href: "/dashboard/users", iconName: "people", roles: ADMIN_ONLY },
       { id: "messages", label: "Messages to customers", href: "/dashboard/messages", iconName: "bell", roles: ADMIN_ONLY },
       { id: "roles", label: "Roles & access", href: "/dashboard/roles", iconName: "shield", roles: ADMIN_ONLY },
+      { id: "audit-trail", label: "Audit trail", href: "/dashboard/audit-trail", iconName: "history", roles: ADMIN_ONLY },
     ],
   },
   {

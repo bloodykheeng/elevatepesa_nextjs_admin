@@ -45,6 +45,13 @@ statuses with `<Pill>` (one colour per meaning everywhere).
 - "Confirm submission" before sending; the API's field errors appear under each field;
 - closing with changes asks first; saving refreshes the lists named in `invalidate`.
 
+Every form dialog closes through `guardedClose(isDirty, isPending, onHide)` (`components/dashboard/ConfirmAction.tsx`)
+from Cancel, × and Escape. It runs straight away (until 2026-11-14 it returned a function the callers never
+called, so Cancel did nothing on any form; `e2e/admin/dialogs.spec.ts` guards it).
+
+The photo field shows its title once: the section says "Photo"; `PhotoUploaderPicker` prints no label
+unless given `heading`. Every thumbnail (`Thumb`) opens full screen on click (PrimeReact `Image` preview).
+
 Saves are multipart `POST /api/admin/<path>/<id>` so a photo can travel with the fields.
 
 ## The simple tables
@@ -60,6 +67,19 @@ orders stopped); the period in the URL; every figure's arrow (on hover) opens th
 same filters (`/dashboard/orders?from=...&to=...&has_balance=1`). Counting rules are the API's
 (`DashboardController`): cancelled orders count in Orders but not in values or balances.
 
+## View dialogs
+
+A View query passes `meta: VIEW_META` and its dialog shows `viewError(query, "order")`
+(`components/dashboard/admin/parts.tsx`): a link to a deleted record (an old bell alert) reads "This order no
+longer exists: it was deleted." instead of a raw API error toast. `RecordDetailsDialog` takes
+`history={{ type: "Order", id }}` for the Admin-only History link into the audit trail.
+
+## Audit trail
+
+`app/dashboard/audit-trail/`: the API's `activity_log` (pesa_back `docs/audit-trail.md`). Values arrive frozen
+(relation and enum labels as they were); `components/dashboard/admin/AuditValue.tsx` only formats them.
+`?subject_type=Order&subject_id=5` is one record's history, `?request=` one request, `?causer=` one person.
+
 ## The bell
 
 `NotificationBell` polls `GET /api/admin/inbox` every minute and on window focus, toasts a new alert once,
@@ -69,4 +89,9 @@ and links each alert to its record. The API writes alerts on new orders, package
 ## Look
 
 Brand tokens in `app/globals.css` (`--brand` emerald #059669, amber accent), light and dark, applied before
-first paint (`app/layout.tsx`). Check new screens at 1536x745 and 1920x1080 in both themes.
+first paint (`app/layout.tsx`). Check new screens at 1536x745 and 1920x1080 in both themes, and at 390
+(phone) and 820 (tablet): the client works from his phone.
+
+To show or hide a PrimeReact component by breakpoint, put `hidden md:block` on a wrapping `div`, never on the
+component: PrimeReact's own `display` rule beats the Tailwind class (the dashboard's period dropdown showed on
+desktops until 2026-11-14).

@@ -10,7 +10,7 @@ import { PageHeader } from "@/components/dashboard/ui";
 import RecordForm, { useOptions } from "@/components/dashboard/admin/RecordForm";
 import PaymentDialog from "@/components/dashboard/admin/PaymentDialog";
 import { useAdminList } from "@/components/dashboard/admin/useAdminList";
-import { ListSearch, Pill, Thumb, choices, methodLabel } from "@/components/dashboard/admin/parts";
+import { ListSearch, Pill, Thumb, choices, methodLabel, VIEW_META, viewError } from "@/components/dashboard/admin/parts";
 import { adminApi } from "@/services/admin";
 import type { Package } from "@/services/types/pesa";
 import { asDate, type ExportColumn } from "@/lib/exportRows";
@@ -30,7 +30,7 @@ export default function PackagesList() {
   const [editing, setEditing] = useState<Package | null>(null);
   const [paying, setPaying] = useState<Package | null>(null);
 
-  const viewing = useQuery({ queryKey: ["packages", "one", list.viewId], queryFn: () => adminApi.package(Number(list.viewId)), enabled: !!list.viewId });
+  const viewing = useQuery({ queryKey: ["packages", "one", list.viewId], queryFn: () => adminApi.package(Number(list.viewId)), enabled: !!list.viewId, meta: VIEW_META });
   const shown = viewing.data ?? null;
 
   const refreshAll = () => {
@@ -113,6 +113,7 @@ export default function PackagesList() {
       />
 
       <RecordDetailsDialog
+        history={shown ? { type: "Package", id: shown.id } : undefined}
         header={shown?.name ?? "Package"}
         visible={!!list.viewId}
         onHide={list.closeView}
@@ -120,7 +121,7 @@ export default function PackagesList() {
         people={false}
         width="min(44rem, 95vw)"
         loading={viewing.isPending}
-        error={viewing.isError ? "This package could not be loaded. It may have been deleted." : undefined}
+        error={viewError(viewing, "package")}
         links={shown?.photo_url ? <Thumb src={shown.photo_url} name={shown.name} size="h-40 w-40" /> : undefined}
         fields={shown ? [
           { label: "Customer", value: shown.created_by ? `${shown.created_by.name}${shown.created_by.phone ? ` · ${shown.created_by.phone}` : ""}` : "-" },

@@ -166,7 +166,8 @@ export function EmptyState({ icon = "pi-inbox", title, body, action }: { icon?: 
  * lines starting "- " make bullets).
  */
 export function Field({ label, required, hint, info, error, htmlFor, children, className = "" }: {
-  label: string;
+  /** Leave out when the section title already names the field. */
+  label?: string;
   required?: boolean;
   hint?: React.ReactNode;
   info?: string;
@@ -178,12 +179,14 @@ export function Field({ label, required, hint, info, error, htmlFor, children, c
   return (
     // data-invalid turns every control inside red (app/globals.css, "Invalid fields").
     <div className={`min-w-0 space-y-1.5 ${className}`} data-invalid={error ? "true" : undefined}>
-      <div className="flex items-center gap-1.5">
-        <label htmlFor={htmlFor} className="block text-sm font-medium text-(--text-primary)">
-          {label} {required && <span className="text-red-500">*</span>}
-        </label>
-        {info && <InfoHint text={info} title={label} variant="info" />}
-      </div>
+      {label && (
+        <div className="flex items-center gap-1.5">
+          <label htmlFor={htmlFor} className="block text-sm font-medium text-(--text-primary)">
+            {label} {required && <span className="text-red-500">*</span>}
+          </label>
+          {info && <InfoHint text={info} title={label} variant="info" />}
+        </div>
+      )}
       {children}
       {error ? <small className="block text-xs text-red-500">{error}</small> : hint && <small className="block text-xs text-(--text-muted)">{hint}</small>}
     </div>

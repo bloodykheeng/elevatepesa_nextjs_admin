@@ -1,7 +1,7 @@
 import axiosAPI from "./axiosApi";
 import { cleanParams } from "./types/api";
 import type {
-  Account, CustomerMessage, Dashboard, InboxItem, MessageRecipient, Options, Order, Package, Paginated, Payment, Product, Role,
+  Account, AuditEntry, AuditEntryDetail, CustomerMessage, Dashboard, InboxItem, MessageRecipient, Options, Order, Package, Paginated, Payment, Product, Role,
 } from "./types/pesa";
 
 /**
@@ -46,6 +46,9 @@ export const adminApi = {
 
   users: (params: Params) => listOf<Account>("users", params),
   user: (id: number) => one<Account>("users", id),
+
+  auditTrail: (params: Params) => get<Paginated<AuditEntry> & { modules: string[] }>("/admin/audit-trail", params),
+  auditEntry: (id: number) => one<AuditEntryDetail>("audit-trail", id),
 
   roles: () => get<{ data: Role[]; permissions: string[] }>("/admin/roles"),
   saveRole: (id: number, permissions: string[]) => post<{ message: string }>(`/admin/roles/${id}`, { permissions }),

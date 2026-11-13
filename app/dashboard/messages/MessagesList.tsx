@@ -11,7 +11,7 @@ import { RecordDetailsDialog } from "@/components/dashboard/audit";
 import { PageHeader } from "@/components/dashboard/ui";
 import SendMessageDialog from "@/components/dashboard/admin/SendMessageDialog";
 import { useAdminList } from "@/components/dashboard/admin/useAdminList";
-import { ListSearch, Pill, choices } from "@/components/dashboard/admin/parts";
+import { ListSearch, Pill, choices, VIEW_META, viewError } from "@/components/dashboard/admin/parts";
 import { adminApi } from "@/services/admin";
 import type { CustomerMessage, MessageRecipient } from "@/services/types/pesa";
 import { asDate, type ExportColumn } from "@/lib/exportRows";
@@ -74,7 +74,7 @@ export default function MessagesList() {
   const sending = list.rows.some((m) => m.status === "queued" || m.status === "sending");
   useQuery({ queryKey: ["notifications", "poll", sending], queryFn: async () => { await list.invalidate(); return null; }, enabled: sending, refetchInterval: 4000 });
 
-  const viewing = useQuery({ queryKey: ["notifications", "one", list.viewId], queryFn: () => adminApi.message(Number(list.viewId)), enabled: !!list.viewId, refetchInterval: (q) => (q.state.data && ["queued", "sending"].includes(q.state.data.status) ? 3000 : false) });
+  const viewing = useQuery({ queryKey: ["notifications", "one", list.viewId], queryFn: () => adminApi.message(Number(list.viewId)), enabled: !!list.viewId, meta: VIEW_META, refetchInterval: (q) => (q.state.data && ["queued", "sending"].includes(q.state.data.status) ? 3000 : false) });
   const shown = viewing.data ?? null;
 
   const filterGroups: FilterGroup[] = [
@@ -130,13 +130,14 @@ export default function MessagesList() {
       />
 
       <RecordDetailsDialog
+        history={shown ? { type: "AdminNotification", id: shown.id } : undefined}
         header={shown?.title ?? "Message"}
         visible={!!list.viewId}
         onHide={list.closeView}
         record={shown}
         width="min(48rem, 95vw)"
         loading={viewing.isPending}
-        error={viewing.isError ? "This message could not be loaded." : undefined}
+        error={viewError(viewing, "message")}
         fields={shown ? [
           { label: "Status", value: <Pill value={shown.status} /> },
           { label: "How", value: channels(shown) },

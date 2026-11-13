@@ -9,7 +9,7 @@ import { RecordDetailsDialog, auditColumns, auditExportColumns } from "@/compone
 import { PageHeader } from "@/components/dashboard/ui";
 import RecordForm, { useOptions } from "@/components/dashboard/admin/RecordForm";
 import { useAdminList } from "@/components/dashboard/admin/useAdminList";
-import { ListSearch, Thumb, choices } from "@/components/dashboard/admin/parts";
+import { ListSearch, Thumb, choices, VIEW_META, viewError } from "@/components/dashboard/admin/parts";
 import { create, one, update } from "@/services/admin";
 import type { ExportColumn } from "@/lib/exportRows";
 import { CATALOG, type Row } from "./catalog";
@@ -18,6 +18,13 @@ import { CATALOG, type Row } from "./catalog";
  * One simple table (App\Admin\Catalog): search, filters as chips, sort, View, Edit, New, tick to
  * delete, Export of every page. Its columns and form come from ./catalog.
  */
+/** The API model each catalogue page edits, for its records' audit trail history. */
+const AUDIT_TYPE: Record<string, string> = {
+  "product-categories": "ProductCategory", "category-brands": "CategoryBrand", "product-types": "ProductType", "inventory-types": "InventoryType",
+  "electronic-categories": "ElectronicCategory", "electronic-brands": "ElectronicBrand", "electronic-types": "ElectronicType",
+  "explore-categories": "ExploreCategory", "explore-category-blogs": "ExploreCategoryBlog", ads: "Ad", faqs: "Faq", referrals: "Referal",
+};
+
 export default function CatalogList({ resource }: { resource: string }) {
   const def = CATALOG[resource];
   const options = useOptions();
@@ -28,6 +35,7 @@ export default function CatalogList({ resource }: { resource: string }) {
     queryKey: [resource, "one", list.viewId],
     queryFn: () => one<Row>(resource, list.viewId),
     enabled: !!list.viewId,
+    meta: VIEW_META,
   });
 
   const filterGroups: FilterGroup[] = def.filters.length
@@ -113,12 +121,13 @@ export default function CatalogList({ resource }: { resource: string }) {
       )}
 
       <RecordDetailsDialog
+        history={shown && AUDIT_TYPE[resource] ? { type: AUDIT_TYPE[resource], id: shown.id } : undefined}
         header={shown ? nameOf(shown) : def.singular}
         visible={!!list.viewId}
         onHide={list.closeView}
         record={shown}
         loading={viewing.isPending}
-        error={viewing.isError ? "This could not be loaded. It may have been deleted." : undefined}
+        error={viewError(viewing, def.singular)}
         fields={shown ? def.view(shown) : []}
         links={shown && def.photo && shown.photo_url ? <Thumb src={shown.photo_url} name={nameOf(shown)} size="h-40 w-40" /> : undefined}
         footer={

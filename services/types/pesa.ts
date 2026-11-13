@@ -27,6 +27,43 @@ export interface Paginated<T> {
 
 export type Money = string | number;
 
+/** One audit trail entry (GET /admin/audit-trail): values were frozen when it was written. */
+export interface AuditEntry {
+  id: number;
+  created_at: string;
+  event: string;
+  event_label: string;
+  module: string | null;
+  description: string;
+  title: string | null;
+  subject_type: string | null;
+  subject_id: number | null;
+  causer_id: number | null;
+  causer: { name: string | null; email: string | null; role: string | null } | null;
+  source: "admin" | "old-admin" | "app" | "system" | null;
+  request_id: string | null;
+  changed: number | null;
+  ip: string | null;
+}
+
+export type AuditValueType = "string" | "text" | "enum" | "relation" | "date" | "datetime" | "boolean" | "number" | "money" | "file" | "secret" | "list";
+export interface AuditField {
+  field: string;
+  label: string;
+  type: AuditValueType;
+  value?: unknown;
+  old?: unknown;
+  new?: unknown;
+  columns?: { key: string; label: string; type?: AuditValueType }[];
+}
+export interface AuditEntryDetail extends AuditEntry {
+  snapshot: AuditField[] | null;
+  changes: AuditField[] | null;
+  request: { id?: string; method?: string; path?: string; ip?: string; user_agent?: string; command?: string } | null;
+  extra: Record<string, unknown> | null;
+  same_request: number;
+}
+
 export interface Payment extends Audited {
   id: number;
   order_id?: number;

@@ -12,7 +12,7 @@ import { PageHeader } from "@/components/dashboard/ui";
 import RecordForm, { useOptions, type Section } from "@/components/dashboard/admin/RecordForm";
 import SendMessageDialog from "@/components/dashboard/admin/SendMessageDialog";
 import { useAdminList } from "@/components/dashboard/admin/useAdminList";
-import { ListSearch, Pill, Thumb, choices } from "@/components/dashboard/admin/parts";
+import { ListSearch, Pill, Thumb, choices, VIEW_META, viewError } from "@/components/dashboard/admin/parts";
 import { useAuth } from "@/contexts/AuthContext";
 import { adminApi, create, update } from "@/services/admin";
 import type { Account } from "@/services/types/pesa";
@@ -32,7 +32,7 @@ export default function UsersList() {
   const [editing, setEditing] = useState<{ row: Row | null } | null>(null);
   const [messaging, setMessaging] = useState<{ id: number; name: string }[] | null>(null);
 
-  const viewing = useQuery({ queryKey: ["users", "one", list.viewId], queryFn: () => adminApi.user(Number(list.viewId)), enabled: !!list.viewId });
+  const viewing = useQuery({ queryKey: ["users", "one", list.viewId], queryFn: () => adminApi.user(Number(list.viewId)), enabled: !!list.viewId, meta: VIEW_META });
   const shown = viewing.data ?? null;
 
   const filterGroups: FilterGroup[] = [
@@ -155,6 +155,7 @@ export default function UsersList() {
       />
 
       <RecordDetailsDialog
+        history={shown ? { type: "User", id: shown.id } : undefined}
         header={shown?.name ?? "Account"}
         visible={!!list.viewId}
         onHide={list.closeView}
@@ -162,7 +163,7 @@ export default function UsersList() {
         people={false}
         width="min(44rem, 95vw)"
         loading={viewing.isPending}
-        error={viewing.isError ? "This account could not be loaded." : undefined}
+        error={viewError(viewing, "account")}
         links={shown ? <div className="flex items-center gap-3"><Thumb src={shown.photo_url} name={shown.name} size="h-16 w-16" round /><Pill value={shown.status} /></div> : undefined}
         fields={shown ? [
           { label: "Email", value: shown.email },

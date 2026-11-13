@@ -188,7 +188,7 @@ export const MANUAL: ManualChapter[] = [
         topics: [
           {
             title: "Add a product",
-            body: "Press New. Pick the inventory type (gas & water, or electronics) first: the form then asks for that type's brand and type. A photo is required, since the app shows every product with its picture.",
+            body: "Press New. Pick the inventory type (gas & water, or electronics) first: the form then asks for its brand and, for gas & water, its product type, or for electronics, its series. A photo is required, since the app shows every product with its picture.",
             notes: ["The photo shows as a preview before you save. When editing, the current photo shows; choose another to replace it, or Remove."],
           },
           {
@@ -203,11 +203,11 @@ export const MANUAL: ManualChapter[] = [
         summary: "The lists products are sorted by, for gas & water and for electronics.",
         iconName: "tag",
         route: "/dashboard/catalog/product-categories",
-        keywords: ["category", "brand", "type", "inventory type", "electronics"],
+        keywords: ["category", "brand", "type", "series", "model", "inventory type", "electronics"],
         topics: [
           {
             title: "Keep them tidy",
-            body: "Each list works the same: search, filter, View, Edit, New, and tick to delete.",
+            body: "Each list works the same: search, filter, View, Edit, New, and tick to delete. Electronics go category, then brand, then series (a model range like Tecno Pop or Itel A70); a brand's Series and Products columns count what is under it. Click any picture to see it full screen.",
             warning: "Something still in use cannot be deleted: a category with brands, a brand with products. Make it Inactive instead. (The database would otherwise delete everything under it.)",
           },
         ],
@@ -296,6 +296,35 @@ export const MANUAL: ManualChapter[] = [
           {
             title: "Roles",
             body: "Admin can do everything. Editor runs day-to-day work but not accounts, roles or messages. Customer is the mobile app's role.",
+          },
+        ],
+      },
+      {
+        id: "audit-trail",
+        title: "Audit trail",
+        summary: "Who did what, when, and from where.",
+        iconName: "history",
+        route: "/dashboard/audit-trail",
+        keywords: ["activity", "history", "log", "changes", "who changed", "sign-ins"],
+        topics: [
+          {
+            title: "What it records",
+            body: "Every order, package, payment, product, catalogue item, advert, FAQ and account created, edited or deleted, in the admin or in the mobile app, plus every sign-in, sign-out and failed sign-in. Each entry says who, when, from where (admin dashboard, mobile app) and what exactly changed.",
+            notes: [
+              "An edit shows each changed field before and after. A create or delete shows the whole record as it was, so a deleted order can still be read.",
+              "Names are kept as they were then: renaming a brand later does not change old entries.",
+              "Passwords are never shown, only that one was changed.",
+            ],
+          },
+          {
+            title: "One record's history",
+            body: "Open any order, product or account and press History at the foot of its details: the audit trail opens filtered to that record. From an entry you can also see everything the same person did, or everything done in the same request.",
+            steps: ["Open the record's View.", "Press History.", "Press Show everything to go back to the full trail."],
+          },
+          {
+            title: "Finding something",
+            body: "Search by a record, a person or a detail; Filters narrow it by module, action (created, edited, deleted, signed in...), where it came from, and days.",
+            warning: "Several failed sign-ins for the same email in a short time can mean someone guessing a password: check the IP address in the entry and make the account inactive if needed.",
           },
         ],
       },

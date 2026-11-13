@@ -41,21 +41,19 @@ export function confirmAction(options: ConfirmOptions): void {
 }
 
 /**
- * A form dialog's close handler: closing with changes asks first, since a half-typed record
+ * Close a form dialog (call it from Cancel, × and Escape): closing with changes asks first, since a half-typed record
  * is easy to lose by a stray click; nothing closes while it is saving.
  */
-export function guardedClose(isDirty: boolean, isPending: boolean, onHide: () => void) {
-  return () => {
-    if (isPending) return;
-    if (!isDirty) return onHide();
-    confirmAction({
-      header: "Discard your changes?",
-      message: "What you typed in this form will be lost.",
-      acceptLabel: "Discard",
-      danger: true,
-      accept: async () => onHide(),
-    });
-  };
+export function guardedClose(isDirty: boolean, isPending: boolean, onHide: () => void): void {
+  if (isPending) return;
+  if (!isDirty) return onHide();
+  confirmAction({
+    header: "Discard your changes?",
+    message: "What you typed in this form will be lost.",
+    acceptLabel: "Discard",
+    danger: true,
+    accept: async () => onHide(),
+  });
 }
 
 /**

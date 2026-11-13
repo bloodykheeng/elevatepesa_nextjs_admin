@@ -153,7 +153,8 @@ export const CATALOG: Record<string, CatalogDef> = {
     nameField: "name",
     columns: [
       { field: "electronic_category", header: "Category", body: rel("electronic_category"), exportValue: rel("electronic_category") as (r: Row) => string },
-      { field: "types_count", header: "Types", sortable: true, body: count("types_count") },
+      { field: "types_count", header: "Series", sortable: true, body: count("types_count") },
+      { field: "products_count", header: "Products", sortable: true, body: count("products_count") },
       { field: "status", header: "Status", sortable: true, body: status, exportValue: (r) => String(r.status) },
     ],
     filters: [
@@ -161,18 +162,19 @@ export const CATALOG: Record<string, CatalogDef> = {
       { key: "status", label: "Status", values: ["active", "inactive"] },
     ],
     sections: [{ title: "Where it belongs", fields: [{ name: "electronic_categories_id", label: "Category", type: "select", optionsKey: "electronic_categories", required: true }] }, basics()],
-    view: (r) => [{ label: "Category", value: rel("electronic_category")(r) }, { label: "Types", value: count("types_count")(r) }, { label: "Status", value: status(r) }, { label: "Details", value: String(r.details ?? "-"), wide: true }],
-    deleteNote: "Brands with types or products are kept.",
+    view: (r) => [{ label: "Category", value: rel("electronic_category")(r) }, { label: "Series", value: count("types_count")(r) }, { label: "Products", value: count("products_count")(r) }, { label: "Status", value: status(r) }, { label: "Details", value: String(r.details ?? "-"), wide: true }],
+    deleteNote: "Brands with series or products are kept.",
   },
   "electronic-types": {
-    title: "Electronic types",
-    singular: "electronic type",
-    subtitle: "Models or ranges, each under an electronic brand.",
+    title: "Electronic series",
+    singular: "series",
+    subtitle: "Models or ranges under a brand: Tecno Pop, Itel A70... Products are listed under one.",
     searchPlaceholder: "Name, code or details",
     photo: {},
     nameField: "name",
     columns: [
       { field: "electronic_brand", header: "Brand", body: rel("electronic_brand"), exportValue: rel("electronic_brand") as (r: Row) => string },
+      { field: "products_count", header: "Products", sortable: true, body: count("products_count") },
       { field: "status", header: "Status", sortable: true, body: status, exportValue: (r) => String(r.status) },
     ],
     filters: [
@@ -180,8 +182,8 @@ export const CATALOG: Record<string, CatalogDef> = {
       { key: "status", label: "Status", values: ["active", "inactive"] },
     ],
     sections: [{ title: "Where it belongs", fields: [{ name: "electronic_brands_id", label: "Brand", type: "select", optionsKey: "electronic_brands", required: true }] }, basics()],
-    view: (r) => [{ label: "Brand", value: rel("electronic_brand")(r) }, { label: "Status", value: status(r) }, { label: "Details", value: String(r.details ?? "-"), wide: true }],
-    deleteNote: "Types with products are kept.",
+    view: (r) => [{ label: "Brand", value: rel("electronic_brand")(r) }, { label: "Products", value: count("products_count")(r) }, { label: "Status", value: status(r) }, { label: "Details", value: String(r.details ?? "-"), wide: true }],
+    deleteNote: "Series with products are kept.",
   },
   ads: {
     title: "Adverts",

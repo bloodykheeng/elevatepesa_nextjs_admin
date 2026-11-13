@@ -198,8 +198,8 @@ export default function RecordForm<T extends { id: number }>({
           </FormSection>
         ))}
         {photo && (
-          <FormSection n={sections.length + 1} title="Photo" hint={photo.hint ?? "JPG, PNG or WebP, up to 5 MB."}>
-            <Field label="Photo" required={photo.required && !record} error={formState.errors.photo?.message as string | undefined}>
+          <FormSection n={sections.length + 1} title="Photo" hint={photo.required && !record ? "Needed: the app shows each one with its picture." : photo.hint}>
+            <Field error={formState.errors.photo?.message as string | undefined}>
               <Controller
                 name="photo"
                 control={control}

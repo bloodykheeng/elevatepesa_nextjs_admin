@@ -35,7 +35,10 @@ interface PhotoUploaderPickerProps {
   /** The stored photo URL when editing. */
   existingPhoto?: string | null;
   fieldName?: string;
+  /** Names the picture in the button ("Upload logo"). */
   label?: string;
+  /** A heading above the picker; leave out when the form already shows one. */
+  heading?: string;
 }
 
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -46,6 +49,7 @@ const PhotoUploaderPicker: React.FC<PhotoUploaderPickerProps> = ({
   existingPhoto = null,
   fieldName = "photo",
   label = "Photo",
+  heading,
 }) => {
   const initialPhoto: UploadedPhoto | null = useMemo(() => {
     if (photo) return photo;
@@ -121,9 +125,11 @@ const PhotoUploaderPicker: React.FC<PhotoUploaderPickerProps> = ({
 
   return (
     <div className="flex flex-col gap-3">
-      <label className="block text-sm font-medium text-(--text-primary)">
-        {label}
-      </label>
+      {heading && (
+        <span className="block text-sm font-medium text-(--text-primary)">
+          {heading}
+        </span>
+      )}
 
       {currentPhoto && (
         <div className="rounded-lg border border-(--border-color) p-3">

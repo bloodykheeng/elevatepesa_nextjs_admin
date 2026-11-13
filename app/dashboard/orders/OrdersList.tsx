@@ -10,7 +10,7 @@ import { PageHeader } from "@/components/dashboard/ui";
 import RecordForm, { useOptions } from "@/components/dashboard/admin/RecordForm";
 import PaymentDialog from "@/components/dashboard/admin/PaymentDialog";
 import { useAdminList } from "@/components/dashboard/admin/useAdminList";
-import { ListSearch, Pill, Thumb, choices, methodLabel, modeLabel } from "@/components/dashboard/admin/parts";
+import { ListSearch, Pill, Thumb, choices, methodLabel, modeLabel, VIEW_META, viewError } from "@/components/dashboard/admin/parts";
 import { adminApi } from "@/services/admin";
 import type { Order } from "@/services/types/pesa";
 import { asDate, type ExportColumn } from "@/lib/exportRows";
@@ -30,7 +30,7 @@ export default function OrdersList() {
   const [editing, setEditing] = useState<Order | null>(null);
   const [paying, setPaying] = useState<Order | null>(null);
 
-  const viewing = useQuery({ queryKey: ["orders", "one", list.viewId], queryFn: () => adminApi.order(Number(list.viewId)), enabled: !!list.viewId });
+  const viewing = useQuery({ queryKey: ["orders", "one", list.viewId], queryFn: () => adminApi.order(Number(list.viewId)), enabled: !!list.viewId, meta: VIEW_META });
   const shown = viewing.data ?? null;
 
   const filterGroups: FilterGroup[] = [
@@ -130,6 +130,7 @@ export default function OrdersList() {
       />
 
       <RecordDetailsDialog
+        history={shown ? { type: "Order", id: shown.id } : undefined}
         header={shown ? `Order #${shown.order_number}` : "Order"}
         visible={!!list.viewId}
         onHide={list.closeView}
@@ -137,7 +138,7 @@ export default function OrdersList() {
         people={false}
         width="min(48rem, 95vw)"
         loading={viewing.isPending}
-        error={viewing.isError ? "This order could not be loaded. It may have been deleted." : undefined}
+        error={viewError(viewing, "order")}
         fields={shown ? [
           { label: "Customer", value: shown.created_by ? <span>{shown.created_by.name}<br /><span className="text-xs text-(--text-muted)">{[shown.created_by.phone, shown.created_by.email].filter(Boolean).join(" · ")}</span></span> : "-" },
           { label: "Placed", value: dateTime(shown.created_at) },

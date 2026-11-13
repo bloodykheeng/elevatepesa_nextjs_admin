@@ -3,8 +3,22 @@
 import { useEffect, useState } from "react";
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
+import { Image } from "primereact/image";
 import { photoUrl } from "@/services/admin";
 import { initials } from "@/lib/format";
+
+/**
+ * A view dialog's own error line, so the global toast stays quiet (the query passes
+ * `meta: VIEW_META`). A link from an old notification can point at a deleted record: say so plainly.
+ */
+export const VIEW_META = { skipGlobalError: true } as const;
+export function viewError(q: { isError: boolean; error: unknown }, what: string): string | undefined {
+  if (!q.isError) return undefined;
+  const status = (q.error as { response?: { status?: number } } | null)?.response?.status;
+  if (status === 404) return `This ${what} no longer exists: it was deleted.`;
+  if (status === 403) return `Your role cannot open this ${what}.`;
+  return `This ${what} could not be loaded. Check your connection and try again.`;
+}
 
 /** The list's search box: submits on Enter or the button, never on every key. */
 export function ListSearch({ value, onSearch, placeholder }: { value: string; onSearch: (v: string) => void; placeholder: string }) {
@@ -30,6 +44,8 @@ const TONE_OF: Record<string, keyof typeof TONES> = {
   active: "green", completed: "green", delivered: "green", received: "green", paid: "green", sent: "green",
   pending: "amber", processing: "blue", queued: "blue", sending: "blue",
   cancelled: "red", failed: "red", inactive: "grey", skipped: "grey",
+  // Audit trail events
+  created: "green", updated: "blue", deleted: "red", signed_in: "grey", signed_out: "grey", sign_in_failed: "amber",
 };
 
 /** A status as a coloured pill, the same colours everywhere ("Paid" and "paid" alike). */
@@ -50,8 +66,21 @@ export function Thumb({ src, name, size = "h-10 w-10", round = false }: { src: s
   if (!url || failed) {
     return <span className={`flex ${size} ${shape} shrink-0 items-center justify-center bg-(--brand-light) text-xs font-semibold text-(--brand-ink)`}>{initials(name ?? "")}</span>;
   }
-  // eslint-disable-next-line @next/next/no-img-element -- photos live on the API host, any size
-  return <img src={url} alt={name ?? ""} loading="lazy" onError={() => setFailed(true)} className={`${size} ${shape} shrink-0 border border-(--border-color) bg-white object-cover`} />;
+  // Click (or Enter) opens it full screen, with zoom and rotate; Escape closes it.
+  return (
+    <Image
+      src={url}
+      alt={name ?? ""}
+      preview
+      className={`${size} shrink-0`}
+      imageClassName={`h-full w-full ${shape} border border-(--border-color) bg-white object-cover`}
+      pt={{
+        image: { loading: "lazy", onError: () => setFailed(true) },
+        previewContainer: { className: shape, title: "View full screen" },
+        preview: { className: "max-h-[90vh] max-w-[95vw] object-contain" },
+      }}
+    />
+  );
 }
 
 /** "mtn_mobile_money" as people say it. */

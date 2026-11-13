@@ -9,7 +9,7 @@ import { RecordDetailsDialog, auditColumns, auditExportColumns } from "@/compone
 import { PageHeader } from "@/components/dashboard/ui";
 import RecordForm, { useOptions, type Section } from "@/components/dashboard/admin/RecordForm";
 import { useAdminList } from "@/components/dashboard/admin/useAdminList";
-import { ListSearch, Pill, Thumb } from "@/components/dashboard/admin/parts";
+import { ListSearch, Pill, Thumb, VIEW_META, viewError } from "@/components/dashboard/admin/parts";
 import { create, one, update } from "@/services/admin";
 import type { Product } from "@/services/types/pesa";
 import type { ExportColumn } from "@/lib/exportRows";
@@ -27,7 +27,7 @@ export default function ProductsList() {
   const options = useOptions();
   const list = useAdminList<Product>({ path: "products", filterKeys: FILTER_KEYS });
   const [editing, setEditing] = useState<{ row: Row | null } | null>(null);
-  const viewing = useQuery({ queryKey: ["products", "one", list.viewId], queryFn: () => one<Product>("products", list.viewId), enabled: !!list.viewId });
+  const viewing = useQuery({ queryKey: ["products", "one", list.viewId], queryFn: () => one<Product>("products", list.viewId), enabled: !!list.viewId, meta: VIEW_META });
   const shown = viewing.data ?? null;
 
   const opts = options.data;
@@ -48,7 +48,7 @@ export default function ProductsList() {
     { title: "Electronics", fields: [
       { type: "select", key: "electronic_category_id", label: "Category", options: pick(opts?.electronic_categories), placeholder: "Any category" },
       { type: "select", key: "electronic_brand_id", label: "Brand", options: pick(opts?.electronic_brands), placeholder: "Any brand" },
-      { type: "select", key: "electronic_type_id", label: "Type", options: pick(opts?.electronic_types), placeholder: "Any type" },
+      { type: "select", key: "electronic_type_id", label: "Series", options: pick(opts?.electronic_types), placeholder: "Any series" },
     ] },
   ];
 
@@ -68,7 +68,7 @@ export default function ProductsList() {
       { name: "product_types_id", label: "Product type", type: "select", optionsKey: "product_types", when: isGasWater },
       { name: "electronic_category_id", label: "Category", type: "select", optionsKey: "electronic_categories", when: isElectronic },
       { name: "electronic_brand_id", label: "Brand", type: "select", optionsKey: "electronic_brands", when: isElectronic, parent: { field: "electronic_category_id", key: "electronic_categories_id" } },
-      { name: "electronic_type_id", label: "Type", type: "select", optionsKey: "electronic_types", when: isElectronic, parent: { field: "electronic_brand_id", key: "electronic_brands_id" } },
+      { name: "electronic_type_id", label: "Series", type: "select", optionsKey: "electronic_types", when: isElectronic, parent: { field: "electronic_brand_id", key: "electronic_brands_id" } },
     ] },
     { title: "Description", fields: [{ name: "details", label: "Details", type: "textarea", hint: "Shown to customers in the app." }] },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -145,7 +145,7 @@ export default function ProductsList() {
         record={editing?.row ?? null}
         title="product"
         sections={sections}
-        photo={{ required: true, hint: "The app shows every product with its picture. JPG, PNG or WebP, up to 5 MB." }}
+        photo={{ required: true, hint: "The app shows every product with its picture." }}
         defaults={{ status: "active", quantity: 0 }}
         save={(body, id) => (id ? update<Row>("products", id, body) : create<Row>("products", body))}
         invalidate={["products", "dashboard"]}
@@ -153,12 +153,13 @@ export default function ProductsList() {
       />
 
       <RecordDetailsDialog
+        history={shown ? { type: "Product", id: shown.id } : undefined}
         header={shown?.name ?? "Product"}
         visible={!!list.viewId}
         onHide={list.closeView}
         record={shown}
         loading={viewing.isPending}
-        error={viewing.isError ? "This product could not be loaded. It may have been deleted." : undefined}
+        error={viewError(viewing, "product")}
         links={shown ? <Thumb src={shown.photo_url} name={shown.name} size="h-44 w-44" /> : undefined}
         fields={shown ? [
           { label: "Price", value: <b>{ugx(Number(shown.price))}</b> },

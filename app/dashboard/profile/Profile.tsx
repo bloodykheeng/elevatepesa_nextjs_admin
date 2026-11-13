@@ -68,7 +68,7 @@ export default function Profile() {
       <div className="grid gap-5 lg:grid-cols-2">
         <Card title="Your details">
           <div className="space-y-4">
-            <PhotoUploaderPicker key={user?.photo_url ?? "none"} setValue={(_f, p) => setPhoto(p)} photo={photo} existingPhoto={user?.photo_url ? photoUrl(user.photo_url) : null} />
+            <PhotoUploaderPicker heading="Photo" key={user?.photo_url ?? "none"} setValue={(_f, p) => setPhoto(p)} photo={photo} existingPhoto={user?.photo_url ? photoUrl(user.photo_url) : null} />
             <Field label="Full name" required htmlFor="p-name" error={profileErrors.name}>
               <InputText id="p-name" value={name} onChange={(e) => setName(e.target.value)} className="w-full" />
             </Field>

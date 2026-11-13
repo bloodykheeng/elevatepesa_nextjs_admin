@@ -132,33 +132,39 @@ export default function DashboardHome() {
       />
 
       <div className="flex flex-wrap items-center gap-2">
-        {/* Buttons from a tablet up; on a phone five buttons wrap into a jumble, so a dropdown. */}
-        <SelectButton
-          value={preset}
-          options={PRESETS}
-          optionLabel="label"
-          optionValue="value"
-          allowEmpty={false}
-          onChange={(e) => e.value && setPeriod({ preset: e.value })}
-          aria-label="Period"
-          className="hidden md:inline-flex"
-        />
-        <Dropdown
-          value={preset}
-          options={preset ? PRESETS : [...PRESETS, { label: "Picked days", value: null as unknown as Preset }]}
-          optionLabel="label"
-          optionValue="value"
-          onChange={(e) => e.value && setPeriod({ preset: e.value })}
-          aria-label="Period"
-          className="min-w-0 flex-1 md:hidden"
-        />
+        {/* Buttons from a tablet up; on a phone five buttons wrap into a jumble, so a dropdown.
+            The hiding is on wrappers: PrimeReact's own display rule beats a class on the component. */}
+        <div className="hidden md:block">
+          <SelectButton
+            value={preset}
+            options={PRESETS}
+            optionLabel="label"
+            optionValue="value"
+            allowEmpty={false}
+            onChange={(e) => e.value && setPeriod({ preset: e.value })}
+            aria-label="Period"
+          />
+        </div>
+        <div className="min-w-0 flex-1 md:hidden">
+          <Dropdown
+            value={preset}
+            options={preset ? PRESETS : [...PRESETS, { label: "Picked days", value: null as unknown as Preset }]}
+            optionLabel="label"
+            optionValue="value"
+            onChange={(e) => e.value && setPeriod({ preset: e.value })}
+            aria-label="Period"
+            className="w-full"
+          />
+        </div>
         <PeriodPicker from={from ?? ""} to={to ?? ""} custom={!preset} onApply={(r) => setPeriod(r)} />
+        {/* The days a preset covers ("1 Nov to 14 Nov 2026"); All time needs no second label. */}
+        {(from || refreshing) && (
+          <span className="flex basis-full items-center gap-2 text-sm text-(--text-secondary) md:basis-auto md:pl-2">
+            {from && to && <><i className="pi pi-calendar text-xs text-(--text-muted)" aria-hidden />{periodText}</>}
+            {refreshing && <span className="inline-flex items-center gap-1 text-xs font-medium text-(--brand-ink)"><i className="pi pi-spin pi-spinner text-xs" /> Updating</span>}
+          </span>
+        )}
       </div>
-      <p className="-mt-2 flex items-center gap-2 text-sm text-(--text-secondary)">
-        <i className="pi pi-calendar text-xs text-(--text-muted)" aria-hidden />
-        {periodText}
-        {refreshing && <span className="inline-flex items-center gap-1 text-xs font-medium text-(--brand-ink)"><i className="pi pi-spin pi-spinner text-xs" /> Updating</span>}
-      </p>
 
       <div className={`grid gap-4 sm:grid-cols-2 xl:grid-cols-4 ${refreshing ? "opacity-60" : ""}`}>
         <KpiCard label="Orders" icon="pi-shopping-cart" loading={loading} value={d?.orders.count} hint={d ? `${d.orders.cancelled} cancelled` : undefined} href={`/dashboard/orders${listQuery()}`} />

@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 import { Dialog } from "@/components/common/Dialog";
 import { Button } from "primereact/button";
 import { dateTime } from "@/lib/format";
@@ -141,6 +143,7 @@ export function RecordDetailsDialog({
   loading = false,
   error,
   after,
+  history,
 }: {
   header: React.ReactNode;
   visible: boolean;
@@ -163,7 +166,10 @@ export function RecordDetailsDialog({
   /** At the very foot, under who made and changed it: the decision, where Alpha's ApprovalActionBar sits (the user,
    * 30 Oct 2026: "your decision has to be last, not in the middle"). */
   after?: React.ReactNode;
+  /** The record in the audit trail (Admin only): its model name ("Order") and id. */
+  history?: { type: string; id: number | string };
 }) {
+  const { role } = useAuth();
   return (
     <Dialog
       header={header}
@@ -208,6 +214,12 @@ export function RecordDetailsDialog({
           </dl>
           {children}
           <AuditDetails record={record} people={people} />
+          {history && role === "Admin" && (
+            <Link href={`/dashboard/audit-trail?subject_type=${history.type}&subject_id=${history.id}`} onClick={onHide}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-(--brand-ink)">
+              <i className="pi pi-history text-xs" aria-hidden /> History: every change to this, who made it and when
+            </Link>
+          )}
           {after}
         </div>
       )}
