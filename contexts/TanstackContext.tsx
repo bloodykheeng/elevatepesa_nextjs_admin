@@ -83,7 +83,12 @@ function makeQueryClient(): QueryClient {
                  * on TanStack's 1, 2, 4 s schedule sends that whole crowd back together; wait
                  * a random 5 to 15 s instead so they come back spread out, and stop after two.
                  */
-                retry: (failureCount, error) => failureCount < (isTooManyRequests(error) ? 2 : 3),
+                // A 4xx other than 429 (not found, refused, invalid) will answer the same again: say so at once.
+                retry: (failureCount, error) => {
+                    const status = (error as { response?: { status?: number } })?.response?.status ?? 0;
+                    if (status >= 400 && status < 500 && !isTooManyRequests(error)) return false;
+                    return failureCount < (isTooManyRequests(error) ? 2 : 3);
+                },
                 retryDelay: (attempt, error) =>
                     isTooManyRequests(error) ? 5000 + Math.random() * 10_000 : Math.min(1000 * 2 ** attempt, 30_000),
             },

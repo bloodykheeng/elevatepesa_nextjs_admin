@@ -56,6 +56,9 @@ export const adminApi = {
   previewMessage: (body: object) => post<{ recipients: number; with_device: number; with_email: number; emails_left_today: number; daily_email_limit: number }>("/admin/notifications/preview", body),
   sendMessage: (body: object) => post<Saved<CustomerMessage>>("/admin/notifications", body),
 
+  updateProfile: (body: FormData) => post<{ message: string; user: Account & { permissions: string[] } }>("/admin/auth/profile", body),
+  changePassword: (body: { current_password: string; password: string; password_confirmation: string }) => post<{ message: string }>("/admin/auth/password", body),
+
   inbox: (params: { unread?: boolean; page?: number; per_page?: number }) =>
     get<{ data: InboxItem[]; meta: Paginated<InboxItem>["meta"]; unread_count: number }>("/admin/inbox", params),
   readInbox: (id: string) => post<{ unread_count: number }>(`/admin/inbox/${id}/read`),

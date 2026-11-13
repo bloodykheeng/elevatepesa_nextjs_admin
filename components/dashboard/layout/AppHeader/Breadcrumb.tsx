@@ -7,21 +7,24 @@ import { MdHome, MdChevronRight } from "react-icons/md";
 
 import { useBreadcrumbState } from "@/contexts/BreadcrumbContext";
 import { listReturnUrl } from "@/lib/listReturn";
+import { menuGroups } from "@/lib/menuItems";
+import type { NavItem } from "@/types/navigation";
 
 // Where the URL segment and the sidebar label differ. Anything not listed is
 // capitalised from the segment ("groups" -> "Groups"), which covers most pages.
 const routeLabels: Record<string, string> = {
   dashboard: "Dashboard",
-  faqs: "FAQs",
-  roles: "Roles & permissions",
-  "audit-trail": "Audit trail",
-  pipeline: "Client pipeline",
-  "client-kyc": "Client KYC",
-  refused: "Refused check-ins",
-  "loan-applications": "Loan applications",
-  "loan-products": "Loan products",
-  "approval-workflows": "Approval workflows",
+  profile: "Your profile",
+  notifications: "Notifications",
 };
+
+/** The menu's own names, by page address: a crumb says what the sidebar says. */
+const menuLabels: Record<string, string> = {};
+const collect = (items: NavItem[]) => items.forEach((i) => { if (i.href) menuLabels[i.href] = i.label; if (i.children) collect(i.children); });
+menuGroups.forEach((g) => collect(g.items));
+
+/** Path segments that group pages but are not a page themselves. */
+const HIDDEN_SEGMENTS = new Set(["catalog"]);
 
 /**
  * Does this segment look like a record id rather than a word?
@@ -34,8 +37,9 @@ function looksLikeAnId(seg: string): boolean {
   return /^[0-9A-HJKMNP-TV-Za-hjkmnp-tv-z]{26}$/.test(seg) || /^[0-9a-f-]{36}$/i.test(seg);
 }
 
-function label(seg: string) {
+function label(seg: string, href?: string) {
   return (
+    (href ? menuLabels[href] : undefined) ??
     routeLabels[seg] ??
     seg.charAt(0).toUpperCase() + seg.slice(1).replace(/-/g, " ")
   );
@@ -68,6 +72,8 @@ export default function Breadcrumb() {
       {segments.map((seg, i) => {
         let href = "/" + segments.slice(0, i + 1).join("/");
         const isLast = i === segments.length - 1;
+        if (HIDDEN_SEGMENTS.has(seg)) return null;
+        const pageHref = href;
         // A list under a record (a client's loan applications) is that record's tab.
         if (!looksLikeAnId(seg) && i > 0 && looksLikeAnId(segments[i - 1]) && !isLast) href = "/" + segments.slice(0, i).join("/") + `?tab=${seg}`;
         // A list goes back where it was left (its page, filters, search: lib/listReturn), once mounted.
@@ -82,7 +88,7 @@ export default function Breadcrumb() {
         const isRecord = looksLikeAnId(seg);
         const own = isRecord && i === lastId ? recordTitle : isRecord ? (parents?.[idPositions.indexOf(i)] ?? null) : null;
         const isResolving = isRecord && claimed && own === null;
-        const text = isRecord ? (own ?? "Details") : label(seg);
+        const text = isRecord ? (own ?? "Details") : label(seg, pageHref);
 
         return (
           <span key={`${seg}-${i}`} className="flex items-center gap-1">

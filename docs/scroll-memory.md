@@ -12,7 +12,7 @@ does. A link to a page starts at the top, as it should.
 ## How it works ([hooks/useScrollMemory.ts](../hooks/useScrollMemory.ts))
 
 - **Saved per URL**, path and query (a list's page, filters and search live in the query), in
-  `sessionStorage` (`letshego.scroll:<url>`), once a frame at most while the person scrolls. Per tab and gone
+  `sessionStorage` (`pesa-admin.scroll:<url>`), once a frame at most while the person scrolls. Per tab and gone
   when the tab closes, which is what a scroll position should be.
 - **Restored only when coming back**: the page load was a `reload` or `back_forward`
   (`PerformanceNavigationTiming.type`), or a `popstate` inside the app. A fresh visit or a link starts at the top.

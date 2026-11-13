@@ -8,7 +8,7 @@ import { Dialog } from "@/components/common/Dialog";
 import { Dropdown } from "primereact/dropdown";
 import FilterSection from "@/components/dashboard/forms/FilterSection";
 import InfiniteSelect, { type Option } from "@/components/dashboard/forms/InfiniteSelect";
-import { shortDate } from "@/lib/format";
+import { calendarDate, calendarDay, shortDate } from "@/lib/format";
 
 /** Values as the URL holds them: one string per key, "" when unset. */
 export type FilterValues = Record<string, string>;
@@ -17,7 +17,8 @@ export type FilterField =
   /** One choice from a short fixed list. */
   | { type: "select"; key: string; label: string; options: { label: string; value: string }[]; placeholder?: string }
   /** From and To, as two URL keys (moments: a time can be picked). */
-  | { type: "dateRange"; from: string; to: string; label: string }
+  /** `days`: whole days as YYYY-MM-DD (the admin API's Kampala days), no time picker. */
+  | { type: "dateRange"; from: string; to: string; label: string; days?: boolean }
   /**
    * One record from a long list (an account, an event), searched page by page. The id goes in
    * `key`, its label in `labelKey`, so the chip and the reopened dialog can name it.
@@ -168,11 +169,19 @@ export default function FiltersButton({
       <React.Fragment key={f.from}>
         <div className="space-y-1.5">
           <label className="block text-sm font-medium text-(--text-primary)">{f.label} from</label>
-          <Calendar value={draft[f.from] ? new Date(draft[f.from]) : null} onChange={(e) => set({ [f.from]: e.value ? (e.value as Date).toISOString() : "" })} placeholder="Any time" showTime hideOnDateTimeSelect hourFormat="12" showButtonBar showIcon className="w-full" />
+          {f.days ? (
+            <Calendar value={calendarDate(draft[f.from] || null)} onChange={(e) => set({ [f.from]: e.value ? calendarDay(e.value as Date) : "" })} placeholder="Any day" dateFormat="d M yy" showButtonBar showIcon className="w-full" />
+          ) : (
+            <Calendar value={draft[f.from] ? new Date(draft[f.from]) : null} onChange={(e) => set({ [f.from]: e.value ? (e.value as Date).toISOString() : "" })} placeholder="Any time" showTime hideOnDateTimeSelect hourFormat="12" showButtonBar showIcon className="w-full" />
+          )}
         </div>
         <div className="space-y-1.5">
           <label className="block text-sm font-medium text-(--text-primary)">{f.label} to</label>
-          <Calendar value={draft[f.to] ? new Date(draft[f.to]) : null} onChange={(e) => set({ [f.to]: e.value ? (e.value as Date).toISOString() : "" })} placeholder="Any time" showTime hideOnDateTimeSelect hourFormat="12" showButtonBar showIcon className="w-full" />
+          {f.days ? (
+            <Calendar value={calendarDate(draft[f.to] || null)} onChange={(e) => set({ [f.to]: e.value ? calendarDay(e.value as Date) : "" })} placeholder="Any day" dateFormat="d M yy" showButtonBar showIcon className="w-full" />
+          ) : (
+            <Calendar value={draft[f.to] ? new Date(draft[f.to]) : null} onChange={(e) => set({ [f.to]: e.value ? (e.value as Date).toISOString() : "" })} placeholder="Any time" showTime hideOnDateTimeSelect hourFormat="12" showButtonBar showIcon className="w-full" />
+          )}
         </div>
       </React.Fragment>
     );

@@ -12,7 +12,6 @@ const executablePath = process.env.PW_CHROMIUM || undefined;
 export default defineConfig({
   testDir: "./e2e",
   // Deletes the throwaway accounts the specs created (e2e/global-teardown.ts).
-  globalTeardown: "./e2e/global-teardown.ts",
   // A route's first visit in `next dev` compiles it, which can take a minute or more.
   timeout: 180_000,
   expect: { timeout: 20_000 },
@@ -30,13 +29,14 @@ export default defineConfig({
     { name: "setup", testMatch: /auth\.setup\.ts/ },
     {
       name: "admin",
-      testMatch: /admin\/.*\.spec\.ts/,
+      // Anchored on e2e/: the repo folder itself is "pesa_admin", which /admin\// also matched.
+      testMatch: /e2e[\\/]admin[\\/].*\.spec\.ts$/,
       dependencies: ["setup"],
       use: { ...devices["Desktop Chrome"], storageState: "e2e/.auth/admin.json" },
     },
     {
       name: "guest",
-      testMatch: /guest\/.*\.spec\.ts/,
+      testMatch: /e2e[\\/]guest[\\/].*\.spec\.ts$/,
       use: { ...devices["Desktop Chrome"] },
     },
   ],

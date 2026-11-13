@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "nextjs-toploader/app";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -40,7 +40,7 @@ export default function NotificationBell() {
     refetchInterval: 60_000,
     refetchOnWindowFocus: true,
   });
-  const items = inbox.data?.data ?? [];
+  const items = useMemo(() => inbox.data?.data ?? [], [inbox.data]);
   const unread = inbox.data?.unread_count ?? 0;
 
   // A new alert since the last check: say so once, in the corner.

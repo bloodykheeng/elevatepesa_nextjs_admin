@@ -1,6 +1,6 @@
 # The user manual
 
-`/dashboard/user-manual`: what each part of Letshego is for and how to do the work, narrowed to the reader's
+`/dashboard/user-manual`: what each part of Elevate Pesa is for and how to do the work, narrowed to the reader's
 role. Laid out as current documentation sites are (Stripe's, Mintlify's; three columns as Kong's and Block's docs
 layouts describe): one surface, a plain side menu (chapters, their modules on a rule), a reading column, "On this
 page" sticky on the right, callouts with a coloured edge; the start page draws the funnel in four steps, marks the

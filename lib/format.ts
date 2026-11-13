@@ -35,7 +35,13 @@ export const BUSINESS_TIMEZONE = "Africa/Kampala";
 /** An instant from the API (or a Date) on the business clock, or null. */
 export function onBusinessClock(value: string | Date | null | undefined, zone: string = BUSINESS_TIMEZONE): DateTime | null {
   if (!value) return null;
-  const dt = value instanceof Date ? DateTime.fromJSDate(value) : DateTime.fromISO(value, { setZone: false });
+  // Columns the API does not cast (users.lastlogin) come as MySQL text, "2025-12-14 20:08:50", in UTC.
+  const sql = typeof value === "string" && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?$/.test(value);
+  const dt = value instanceof Date
+    ? DateTime.fromJSDate(value)
+    : sql
+      ? DateTime.fromSQL(value, { zone: "utc" })
+      : DateTime.fromISO(value, { setZone: false });
   return dt.isValid ? dt.setZone(zone) : null;
 }
 
