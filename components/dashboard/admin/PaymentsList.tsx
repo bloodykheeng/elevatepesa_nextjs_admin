@@ -34,11 +34,11 @@ export default function PaymentsList({ kind }: { kind: "payments" | "package-pay
     { field: "created_at", header: "Received", sortable: true, body: (p: Payment) => <span className="whitespace-nowrap text-sm">{dateTime(p.created_at)}</span> },
     { field: "amount", header: "Amount", sortable: true, body: (p: Payment) => <b className="whitespace-nowrap">{ugx(Number(p.amount))}</b> },
     { field: "payment_method", header: "Method", sortable: true, body: (p: Payment) => methodLabel(p.payment_method), exportValue: (p: Payment) => methodLabel(p.payment_method) },
-    { field: "transaction_number", header: "Transaction", body: (p: Payment) => <span className="font-mono text-xs">{p.transaction_number || "-"}</span> },
+    { field: "transaction_number", mobile: false, header: "Transaction", body: (p: Payment) => <span className="font-mono text-xs">{p.transaction_number || "-"}</span> },
     { field: "reference", header: forOrders ? "Order" : "Package", body: (p: Payment) => <Link href={href(p)} className="text-(--brand-ink) hover:underline">{ref(p)}</Link>, exportValue: ref },
-    { field: "customer", header: "Customer", body: (p: Payment) => <span className="text-sm">{p.customer?.name ?? "-"}<br /><span className="text-xs text-(--text-muted)">{p.customer?.phone ?? ""}</span></span>, exportValue: (p: Payment) => p.customer?.name ?? "" },
-    { field: "recorded_by", header: "Recorded by", body: (p: Payment) => p.created_by?.name ?? "-", exportValue: (p: Payment) => p.created_by?.name ?? "" },
-    { field: "details", header: "Note", visible: false, body: (p: Payment) => p.details ?? "-" },
+    { field: "customer", mobile: false, header: "Customer", body: (p: Payment) => <span className="text-sm">{p.customer?.name ?? "-"}<br /><span className="text-xs text-(--text-muted)">{p.customer?.phone ?? ""}</span></span>, exportValue: (p: Payment) => p.customer?.name ?? "" },
+    { field: "recorded_by", mobile: false, header: "Recorded by", body: (p: Payment) => p.created_by?.name ?? "-", exportValue: (p: Payment) => p.created_by?.name ?? "" },
+    { field: "details", mobile: false, header: "Note", visible: false, body: (p: Payment) => p.details ?? "-" },
   ];
 
   const exportColumns: ExportColumn<Payment>[] = [

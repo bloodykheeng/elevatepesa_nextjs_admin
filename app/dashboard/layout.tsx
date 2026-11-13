@@ -4,7 +4,7 @@ import DashboardLayout from "@/components/dashboard/layout/DashboardLayout";
 export const metadata: Metadata = {
   title: {
     template: "%s | Elevate Pesa Admin",
-    default: "Overview",
+    default: "Dashboard",
   },
   // Signed-in pages are nobody's to index or share.
   robots: { index: false, follow: false },

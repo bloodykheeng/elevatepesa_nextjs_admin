@@ -11,8 +11,8 @@ export function ListSearch({ value, onSearch, placeholder }: { value: string; on
   const [text, setText] = useState(value);
   useEffect(() => setText(value), [value]);
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSearch(text.trim()); }} className="flex">
-      <InputText value={text} onChange={(e) => setText(e.target.value)} placeholder={placeholder} aria-label="Search" className="w-60 rounded-r-none! text-sm" />
+    <form onSubmit={(e) => { e.preventDefault(); onSearch(text.trim()); }} className="flex min-w-0 flex-1 sm:flex-none">
+      <InputText value={text} onChange={(e) => setText(e.target.value)} placeholder={placeholder} aria-label="Search" className="w-full min-w-0 rounded-r-none! text-sm sm:w-60" />
       <Button type="submit" icon="pi pi-search" severity="secondary" outlined className="rounded-l-none!" aria-label="Search" />
     </form>
   );

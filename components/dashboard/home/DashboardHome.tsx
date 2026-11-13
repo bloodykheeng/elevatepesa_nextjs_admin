@@ -5,13 +5,14 @@ import { useSearchParams, usePathname } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
 import { useQuery } from "@tanstack/react-query";
 import { SelectButton } from "primereact/selectbutton";
+import { Dropdown } from "primereact/dropdown";
 import type Highcharts from "highcharts";
 import BaseChart from "@/components/common/charts/BaseChart";
 import { ChartCard, KpiCard, OpenLink } from "@/components/dashboard/insights/parts";
 import PeriodPicker from "@/components/dashboard/insights/PeriodPicker";
 import { PageHeader } from "@/components/dashboard/ui";
 import { adminApi } from "@/services/admin";
-import { businessNow, longDate, ugx, ugxShort } from "@/lib/format";
+import { businessNow, shortDate, ugx, ugxShort } from "@/lib/format";
 import { periodLabel } from "@/lib/period";
 
 type Preset = "all" | "today" | "month" | "year" | "30d";
@@ -127,10 +128,11 @@ export default function DashboardHome() {
     <div className="space-y-5">
       <PageHeader
         title="Dashboard"
-        subtitle={d?.data_range.last_order ? `Orders from ${longDate(d.data_range.first_order)} to ${longDate(d.data_range.last_order)}.` : undefined}
+        subtitle={d?.data_range.last_order ? `Orders from ${shortDate(d.data_range.first_order)} to ${shortDate(d.data_range.last_order)}.` : undefined}
       />
 
       <div className="flex flex-wrap items-center gap-2">
+        {/* Buttons from a tablet up; on a phone five buttons wrap into a jumble, so a dropdown. */}
         <SelectButton
           value={preset}
           options={PRESETS}
@@ -139,6 +141,16 @@ export default function DashboardHome() {
           allowEmpty={false}
           onChange={(e) => e.value && setPeriod({ preset: e.value })}
           aria-label="Period"
+          className="hidden md:inline-flex"
+        />
+        <Dropdown
+          value={preset}
+          options={preset ? PRESETS : [...PRESETS, { label: "Picked days", value: null as unknown as Preset }]}
+          optionLabel="label"
+          optionValue="value"
+          onChange={(e) => e.value && setPeriod({ preset: e.value })}
+          aria-label="Period"
+          className="min-w-0 flex-1 md:hidden"
         />
         <PeriodPicker from={from ?? ""} to={to ?? ""} custom={!preset} onApply={(r) => setPeriod(r)} />
       </div>

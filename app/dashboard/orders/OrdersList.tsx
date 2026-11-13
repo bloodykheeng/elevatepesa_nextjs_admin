@@ -69,13 +69,13 @@ export default function OrdersList() {
     },
     { field: "created_at", header: "Placed", sortable: true, body: (o: Order) => <span className="whitespace-nowrap text-sm">{dateTime(o.created_at)}</span> },
     { field: "charged_amount", header: "Charged", sortable: true, body: (o: Order) => <span className="whitespace-nowrap">{ugx(n(o.charged_amount))}</span> },
-    { field: "amount_paid", header: "Paid", sortable: true, body: (o: Order) => <span className="whitespace-nowrap">{ugx(n(o.amount_paid))}</span> },
+    { field: "amount_paid", mobile: false, header: "Paid", sortable: true, body: (o: Order) => <span className="whitespace-nowrap">{ugx(n(o.amount_paid))}</span> },
     { field: "balance_due", header: "Balance", sortable: true, body: (o: Order) => <span className={`whitespace-nowrap font-semibold ${n(o.balance_due) > 0 && o.status !== "cancelled" ? "text-red-600 dark:text-red-400" : "text-(--text-muted)"}`}>{ugx(n(o.balance_due))}</span> },
     { field: "status", header: "Status", sortable: true, body: (o: Order) => <Pill value={o.status} /> },
-    { field: "payment_status", header: "Payment", sortable: true, body: (o: Order) => <span className="flex flex-col items-start gap-0.5"><Pill value={o.payment_status} /><span className="whitespace-nowrap text-[11px] text-(--text-muted)">{modeLabel(o.payment_mode)}</span></span> },
+    { field: "payment_status", mobile: false, header: "Payment", sortable: true, body: (o: Order) => <span className="flex flex-col items-start gap-0.5"><Pill value={o.payment_status} /><span className="whitespace-nowrap text-[11px] text-(--text-muted)">{modeLabel(o.payment_mode)}</span></span> },
     { field: "delivery_status", header: "Delivery", sortable: true, body: (o: Order) => <Pill value={o.delivery_status} /> },
-    { field: "address", header: "Address", visible: false, body: (o: Order) => o.address ?? "-" },
-    { field: "order_products_count", header: "Items", visible: false },
+    { field: "address", mobile: false, header: "Address", visible: false, body: (o: Order) => o.address ?? "-" },
+    { field: "order_products_count", mobile: false, header: "Items", visible: false },
     ...auditColumns<Order>({ people: false }),
   ];
 

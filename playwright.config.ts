@@ -29,7 +29,7 @@ export default defineConfig({
     { name: "setup", testMatch: /auth\.setup\.ts/ },
     {
       name: "admin",
-      // Anchored on e2e/: the repo folder itself is "pesa_admin", which /admin\// also matched.
+      // Anchored on e2e/: the repo folder itself is "pesa_nextjs_admin", which /admin\// also matched.
       testMatch: /e2e[\\/]admin[\\/].*\.spec\.ts$/,
       dependencies: ["setup"],
       use: { ...devices["Desktop Chrome"], storageState: "e2e/.auth/admin.json" },

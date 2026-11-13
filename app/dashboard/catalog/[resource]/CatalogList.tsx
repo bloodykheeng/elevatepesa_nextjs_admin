@@ -59,7 +59,7 @@ export default function CatalogList({ resource }: { resource: string }) {
       ),
       exportValue: nameOf,
     },
-    ...def.columns,
+    ...def.columns.map((c) => (c.field === "status" ? c : { ...c, mobile: false })),
     ...auditColumns<Row>(),
   ];
 

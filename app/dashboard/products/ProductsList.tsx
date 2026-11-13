@@ -93,11 +93,11 @@ export default function ProductsList() {
         </div>
       ),
     },
-    { field: "inventory_type", header: "Inventory type", body: (p: Product) => p.inventory_type?.name ?? "-", exportValue: (p: Product) => p.inventory_type?.name ?? "" },
+    { field: "inventory_type", mobile: false, header: "Inventory type", body: (p: Product) => p.inventory_type?.name ?? "-", exportValue: (p: Product) => p.inventory_type?.name ?? "" },
     { field: "price", header: "Price", sortable: true, body: (p: Product) => <span className="whitespace-nowrap font-medium">{ugx(Number(p.price))}</span> },
     { field: "quantity", header: "In stock", sortable: true, body: (p: Product) => <span className={p.quantity <= 0 ? "font-semibold text-red-600 dark:text-red-400" : ""}>{p.quantity.toLocaleString("en-UG")}</span> },
     { field: "status", header: "Status", sortable: true, body: (p: Product) => <Pill value={p.status} /> },
-    { field: "details", header: "Details", visible: false, body: (p: Product) => <span className="line-clamp-2 max-w-sm text-sm">{p.details ?? "-"}</span> },
+    { field: "details", mobile: false, header: "Details", visible: false, body: (p: Product) => <span className="line-clamp-2 max-w-sm text-sm">{p.details ?? "-"}</span> },
     ...auditColumns<Product>(),
   ];
 

@@ -63,14 +63,14 @@ export default function PackagesList() {
         </div>
       ),
     },
-    { field: "route", header: "From → to", body: (p: Package) => <span className="text-sm">{p.pickup ?? "?"} → {p.destination ?? "?"}</span>, exportValue: (p: Package) => `${p.pickup ?? ""} to ${p.destination ?? ""}` },
+    { field: "route", mobile: false, header: "From → to", body: (p: Package) => <span className="text-sm">{p.pickup ?? "?"} → {p.destination ?? "?"}</span>, exportValue: (p: Package) => `${p.pickup ?? ""} to ${p.destination ?? ""}` },
     { field: "created_at", header: "Booked", sortable: true, body: (p: Package) => <span className="whitespace-nowrap text-sm">{dateTime(p.created_at)}</span> },
-    { field: "charged_amount", header: "Charged", sortable: true, body: (p: Package) => <span className="whitespace-nowrap">{ugx(n(p.charged_amount))}</span> },
+    { field: "charged_amount", mobile: false, header: "Charged", sortable: true, body: (p: Package) => <span className="whitespace-nowrap">{ugx(n(p.charged_amount))}</span> },
     { field: "balance_due", header: "Balance", sortable: true, body: (p: Package) => <span className={`whitespace-nowrap font-semibold ${n(p.balance_due) > 0 ? "text-red-600 dark:text-red-400" : "text-(--text-muted)"}`}>{ugx(n(p.balance_due))}</span> },
     { field: "status", header: "Status", sortable: true, body: (p: Package) => <Pill value={p.status} /> },
     { field: "delivery_status", header: "Delivery", body: (p: Package) => <Pill value={p.delivery_status} /> },
-    { field: "payment_status", header: "Payment", body: (p: Package) => <Pill value={p.payment_status} /> },
-    { field: "package_number", header: "Number", sortable: true, visible: false },
+    { field: "payment_status", mobile: false, header: "Payment", body: (p: Package) => <Pill value={p.payment_status} /> },
+    { field: "package_number", mobile: false, header: "Number", sortable: true, visible: false },
     ...auditColumns<Package>({ people: false }),
   ];
 

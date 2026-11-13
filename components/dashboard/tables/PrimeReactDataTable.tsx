@@ -50,6 +50,11 @@ export type ColumnConfig<T> = {
   body?: (rowData: T) => React.ReactNode;
   /** `false` hides the column initially. The user can still switch it on. */
   visible?: boolean;
+  /**
+   * `false` leaves it out of the phone card (under 960px each row is a card listing its columns):
+   * keep a card to what is read at a glance. Still in View, the column menu on a wide screen and the export.
+   */
+  mobile?: boolean;
   /** Shows the 3-state sort arrows. Ignored unless the table is given `sort`. */
   sortable?: boolean;
   /** The key sent to the API when sorting this column. Defaults to `field`. */
@@ -774,7 +779,7 @@ const PrimeReactDataTable = <T extends DataItem>({
                 sortField={col.sortField ?? col.field}
                 headerStyle={{ whiteSpace: "nowrap" }}
                 headerClassName="text-xs! font-semibold! uppercase! tracking-wider! text-!(--text-muted) bg-!(--bg-page)"
-                bodyClassName="text-!(--text-secondary) py-3!"
+                bodyClassName={`text-!(--text-secondary) py-3! ${col.mobile === false ? "col-desktop-only" : ""}`}
               />
             ) : null,
           )}

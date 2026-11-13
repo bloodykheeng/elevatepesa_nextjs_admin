@@ -379,3 +379,8 @@ textarea::placeholder,
    holds the title, the switch, the days and Filters on one line at 1536 wide. */
 .insights-period .p-button { padding: 0.45rem 0.8rem; font-size: 0.875rem; }
 .p-button.insights-days { padding: 0.45rem 0.8rem; font-size: 0.875rem; white-space: nowrap; }
+
+/* Phone cards (the table's stack layout under 960px) leave out columns marked mobile: false. */
+@media (max-width: 960px) {
+  .p-datatable .p-datatable-tbody > tr > td.col-desktop-only { display: none !important; }
+}

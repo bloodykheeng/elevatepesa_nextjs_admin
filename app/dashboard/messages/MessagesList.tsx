@@ -88,11 +88,11 @@ export default function MessagesList() {
   const columns = [
     { field: "title", header: "Message", sortable: true, body: (m: CustomerMessage) => <div className="max-w-md"><p className="font-medium text-(--text-primary)">{m.title}</p><p className="truncate text-xs text-(--text-muted)">{m.body}</p></div> },
     { field: "created_at", header: "Sent", sortable: true, body: (m: CustomerMessage) => <span className="whitespace-nowrap text-sm">{dateTime(m.created_at)}</span> },
-    { field: "channels", header: "How", body: (m: CustomerMessage) => channels(m), exportValue: channels },
+    { field: "channels", mobile: false, header: "How", body: (m: CustomerMessage) => channels(m), exportValue: channels },
     { field: "recipients_count", header: "To", sortable: true, body: (m: CustomerMessage) => `${m.recipients_count.toLocaleString("en-UG")} ${m.audience === "all_customers" ? "(everyone)" : ""}` },
-    { field: "result", header: "Reached", body: (m: CustomerMessage) => <span className="whitespace-nowrap text-sm">{m.send_push ? `${m.push_sent} push` : ""}{m.send_push && m.send_email ? " · " : ""}{m.send_email ? `${m.email_sent} email` : ""}{m.push_failed + m.email_failed ? <span className="text-red-600 dark:text-red-400"> · {m.push_failed + m.email_failed} failed</span> : null}</span>, exportValue: (m: CustomerMessage) => `${m.push_sent} push, ${m.email_sent} email, ${m.push_failed + m.email_failed} failed` },
+    { field: "result", mobile: false, header: "Reached", body: (m: CustomerMessage) => <span className="whitespace-nowrap text-sm">{m.send_push ? `${m.push_sent} push` : ""}{m.send_push && m.send_email ? " · " : ""}{m.send_email ? `${m.email_sent} email` : ""}{m.push_failed + m.email_failed ? <span className="text-red-600 dark:text-red-400"> · {m.push_failed + m.email_failed} failed</span> : null}</span>, exportValue: (m: CustomerMessage) => `${m.push_sent} push, ${m.email_sent} email, ${m.push_failed + m.email_failed} failed` },
     { field: "status", header: "Status", body: (m: CustomerMessage) => <Pill value={m.status} /> },
-    { field: "created_by", header: "By", body: (m: CustomerMessage) => m.created_by?.name ?? "-", exportValue: (m: CustomerMessage) => m.created_by?.name ?? "" },
+    { field: "created_by", mobile: false, header: "By", body: (m: CustomerMessage) => m.created_by?.name ?? "-", exportValue: (m: CustomerMessage) => m.created_by?.name ?? "" },
   ];
 
   const exportColumns: ExportColumn<CustomerMessage>[] = [

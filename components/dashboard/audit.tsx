@@ -44,7 +44,7 @@ export function UserReferenceCell({ user }: { user?: UserReference | null }) {
 export function auditColumns<T extends Audited>({ people = true, updated = true }: { people?: boolean; updated?: boolean } = {}) {
   return [
     {
-      field: "created_at",
+      field: "created_at", mobile: false,
       header: "Created",
       type: "date",
       sortable: true,
@@ -55,7 +55,7 @@ export function auditColumns<T extends Audited>({ people = true, updated = true 
     ...(updated
       ? [
           {
-            field: "updated_at",
+            field: "updated_at", mobile: false,
             header: "Updated",
             type: "date",
             visible: false,
@@ -197,10 +197,10 @@ export function RecordDetailsDialog({
           {links && (
             <div onClickCapture={(e) => (e.target as HTMLElement).closest("a") && onHide()}>{links}</div>
           )}
-          <dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm sm:gap-x-6">
             {fields.map((f, i) => (
               // Index too: two fields may share a label, and a repeated key drops one of them.
-              <div key={`${i}-${f.label}`} className={`min-w-0 ${f.wide ? "sm:col-span-2" : ""}`}>
+              <div key={`${i}-${f.label}`} className={`min-w-0 ${f.wide ? "col-span-2" : ""}`}>
                 <dt className="mb-0.5 text-xs text-(--text-muted)">{f.label}</dt>
                 <dd className="wrap-break-word text-(--text-primary)">{f.value ?? "N/A"}</dd>
               </div>
