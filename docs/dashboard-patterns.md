@@ -131,9 +131,17 @@ longer exists: it was deleted." instead of a raw API error toast. `RecordDetails
 
 ## The bell
 
-`NotificationBell` polls `GET /api/admin/inbox` every minute and on window focus, toasts a new alert once,
-and links each alert to its record. The API writes alerts on new orders, package bookings and sign-ups
+`NotificationBell` reads `GET /api/admin/inbox`, refreshed by a live Reverb signal the moment an alert is stored
+(and on window focus), toasts a new alert once, and links each alert to its record. Nothing polls. The API writes alerts on new orders, package bookings and sign-ups
 (model observers) and when a message send finishes.
+
+## Live updates
+
+`hooks/useLiveSignals.ts` (mounted once in `DashboardLayout`) listens on Reverb through `lib/echo.ts` and refreshes
+the queries each API signal names: the bell, the lists after a new order/package/customer, Settings › Queues, a
+sending message. A screen that should stay current adds its query key to `REFRESH` there and the API fires
+`StaffSignal` where the data changes; never a `refetchInterval`. Settings: `NEXT_PUBLIC_REVERB_*` in `.env.local`.
+The whole design: `pesa_back/docs/realtime.md`.
 
 ## Look
 

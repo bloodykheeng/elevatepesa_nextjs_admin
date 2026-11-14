@@ -44,7 +44,8 @@ const When = ({ iso }: { iso: string | null }) => (
 /**
  * Background work, as Alpha and NICE show theirs: what is waiting for the queue worker, and what failed, with Retry
  * and Delete. Messages to customers, push messages and emails all go through it, so a request never waits on Firebase
- * or the mail server. The counts refresh on their own; a warning says when no worker is picking jobs up.
+ * or the mail server. The counts refresh live (a Reverb signal whenever a job is queued, finishes or fails); a
+ * warning says when no worker is picking jobs up.
  */
 export default function QueuesList() {
   const toast = usePrimeReactToast();
@@ -56,7 +57,6 @@ export default function QueuesList() {
   const stats = useQuery({
     queryKey: ["queues/stats"],
     queryFn: async () => (await axiosAPI.get<Stats>("/admin/queues/stats")).data,
-    refetchInterval: 10_000,
   });
   const viewing = useQuery({
     queryKey: ["queues/failed", "one", failed.viewId],

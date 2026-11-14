@@ -1,5 +1,6 @@
 "use client";
 
+import { disconnectEcho } from "@/lib/echo";
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient, type UseMutationResult, type UseQueryResult } from "@tanstack/react-query";
 import type { AxiosError, AxiosResponse } from "axios";
@@ -55,6 +56,8 @@ export function AuthContext({ children }: { children: ReactNode }) {
   });
 
   const endSession = useCallback(() => {
+    // The next session authorises its own live channels.
+    disconnectEcho();
     queryClient.cancelQueries();
     leaveToSignIn();
   }, [queryClient]);

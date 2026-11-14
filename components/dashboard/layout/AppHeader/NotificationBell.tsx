@@ -22,8 +22,9 @@ const KIND_ICON: Record<string, string> = {
 
 /**
  * The bell: the signed-in staff member's alerts (new orders, package bookings, sign-ups, a
- * message send that finished), from GET /api/admin/inbox. Checked every minute and when the tab
- * comes back into view; a new alert also shows as a short notice in the corner.
+ * message send that finished), from GET /api/admin/inbox. Refreshed the moment the API stores one (a Reverb
+ * signal, hooks/useLiveSignals.ts) and when the tab comes back into view; never polled. A new alert also shows as a
+ * short notice in the corner.
  */
 export default function NotificationBell() {
   const router = useRouter();
@@ -37,7 +38,6 @@ export default function NotificationBell() {
     queryKey: [...INBOX_KEY, "bell"],
     queryFn: () => adminApi.inbox({ per_page: 10 }),
     enabled: !!user?.id,
-    refetchInterval: 60_000,
     refetchOnWindowFocus: true,
   });
   const items = useMemo(() => inbox.data?.data ?? [], [inbox.data]);

@@ -71,10 +71,9 @@ export default function MessagesList() {
   const [composing, setComposing] = useState(false);
 
   // While a send is still going, check every few seconds so its counts fill in.
-  const sending = list.rows.some((m) => m.status === "queued" || m.status === "sending");
-  useQuery({ queryKey: ["notifications", "poll", sending], queryFn: async () => { await list.invalidate(); return null; }, enabled: sending, refetchInterval: 4000 });
+  // A send in progress is followed live: the API signals each batch and the end (Reverb), which refreshes this list.
 
-  const viewing = useQuery({ queryKey: ["notifications", "one", list.viewId], queryFn: () => adminApi.message(Number(list.viewId)), enabled: !!list.viewId, meta: VIEW_META, refetchInterval: (q) => (q.state.data && ["queued", "sending"].includes(q.state.data.status) ? 3000 : false) });
+  const viewing = useQuery({ queryKey: ["notifications", "one", list.viewId], queryFn: () => adminApi.message(Number(list.viewId)), enabled: !!list.viewId, meta: VIEW_META });
   const shown = viewing.data ?? null;
 
   const filterGroups: FilterGroup[] = [

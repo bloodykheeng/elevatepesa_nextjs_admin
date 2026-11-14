@@ -15,6 +15,7 @@ import RecordPeekHost from "@/components/dashboard/records/RecordPeekHost";
 // Single source of truth for the nav and for page access: see lib/menuItems.ts.
 import { menuGroups } from "@/lib/menuItems";
 import { useScrollMemory } from "@/hooks/useScrollMemory";
+import { useLiveSignals } from "@/hooks/useLiveSignals";
 
 /** Reads the URL, so it sits in its own Suspense boundary (Cache Components). */
 function ScrollMemory({ box }: { box: React.RefObject<HTMLElement | null> }) {
@@ -25,6 +26,8 @@ function ScrollMemory({ box }: { box: React.RefObject<HTMLElement | null> }) {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { isMobileOpen, closeMobile, layoutWidth } = useSidebar();
   const { isProfileLoading } = useAuth();
+  // Live updates through Reverb: the bell, new orders, queues, message progress. Nothing in the admin polls.
+  useLiveSignals();
   // Reload or Back / Forward returns to the same place on the page (docs/scroll-memory.md).
   const main = useRef<HTMLElement>(null);
 
