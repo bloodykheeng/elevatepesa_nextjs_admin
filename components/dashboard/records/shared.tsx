@@ -53,6 +53,7 @@ export function PaymentsSection({ payments, kind, balance = 0, actions }: {
         <h3 className="m-0 text-sm font-semibold text-(--text-primary)">
           Payments{count ? ` (${count})` : ""}
           {balance > 0 && <span className="ml-2 font-normal text-red-600 dark:text-red-400">{ugx(balance)} still owed</span>}
+          {balance <= 0 && count > 0 && <span className="ml-2 font-normal text-green-700 dark:text-green-400">Paid in full</span>}
         </h3>
         {actions?.onRecord && balance > 0 && (
           <Button label={count ? "Record another instalment" : "Record a payment"} icon="pi pi-wallet" size="small" outlined onClick={actions.onRecord} />

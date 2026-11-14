@@ -81,10 +81,10 @@ export default function UsersList() {
     { field: "phone", header: "Phone", sortable: true, body: (u: Account) => <span className="whitespace-nowrap text-sm">{u.phone ?? "-"}</span> },
     { field: "role", header: "Role", body: (u: Account) => <span className="text-sm">{u.role ?? "-"}</span> },
     { field: "orders_count", header: "Orders", sortable: true, body: (u: Account) => (u.orders_count ? <Link href={`/dashboard/orders?customer=${u.id}`} className="text-(--brand-ink) hover:underline">{u.orders_count}</Link> : "0") },
-    { field: "has_device", mobile: false, header: "Push", body: (u: Account) => (u.has_device ? <i className="pi pi-mobile text-(--brand-ink)" title="Has the app on a phone: can get push" /> : <span className="text-(--text-muted)">-</span>), exportValue: (u: Account) => (u.has_device ? "Yes" : "No") },
+    { field: "has_device", mobile: false, header: "Push", visible: false, body: (u: Account) => (u.has_device ? <i className="pi pi-mobile text-(--brand-ink)" title="Has the app on a phone: can get push" /> : <span className="text-(--text-muted)">-</span>), exportValue: (u: Account) => (u.has_device ? "Yes" : "No") },
     { field: "status", header: "Status", sortable: true, body: (u: Account) => <Pill value={u.status} /> },
     { field: "lastlogin", mobile: false, header: "Last sign-in", sortable: true, body: (u: Account) => <span className="whitespace-nowrap text-xs text-(--text-muted)">{u.lastlogin ? dateTime(u.lastlogin) : "Never"}</span> },
-    { field: "created_at", mobile: false, header: "Joined", sortable: true, body: (u: Account) => <span className="whitespace-nowrap text-xs text-(--text-muted)">{shortDate(u.created_at)}</span> },
+    { field: "created_at", mobile: false, header: "Joined", sortable: true, visible: false, body: (u: Account) => <span className="whitespace-nowrap text-xs text-(--text-muted)">{shortDate(u.created_at)}</span> },
     { field: "nin", mobile: false, header: "NIN", visible: false, body: (u: Account) => u.nin ?? "-" },
     { field: "gender", mobile: false, header: "Gender", visible: false, body: (u: Account) => u.gender ?? "-" },
   ];

@@ -61,17 +61,17 @@ export function CustomerDetailsDialog({ id, visible, onHide, actions }: {
         // Two rows, not one band: who they are and how to reach them, then what they ordered and owe, each with room
         // (the one-band version squeezed three pills, two contact lines and three figures together, the user, 14/11/2026).
         <div className="space-y-3">
-          <div className="flex items-center gap-4 rounded-xl border border-(--border-color) p-4">
+          <div className="flex items-center gap-5 rounded-xl border border-(--border-color) p-5">
             <Thumb src={u.photo_url} name={u.name} size="h-14 w-14" round />
-            <div className="min-w-0 flex-1 space-y-2">
-              <p className="m-0 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-(--text-secondary)">
+            <div className="min-w-0 flex-1 space-y-3">
+              <p className="m-0 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-(--text-secondary)">
                 <span className="font-medium text-(--text-primary)">{u.role ?? "No role"}</span>
                 <Pill value={u.status} />
                 {u.has_device && (
                   <span className="inline-flex items-center gap-1" title="Has the app on a phone: can get push messages"><i className="pi pi-mobile text-xs" aria-hidden />Has the app</span>
                 )}
               </p>
-              <div className="flex flex-col gap-1 text-sm sm:flex-row sm:flex-wrap sm:gap-x-6">
+              <div className="flex flex-col gap-2 text-sm sm:flex-row sm:flex-wrap sm:gap-x-8">
                 <a href={`mailto:${u.email}`} className="inline-flex min-w-0 items-center gap-2 text-(--text-secondary) no-underline hover:underline">
                   <i className="pi pi-envelope text-xs text-(--text-muted)" aria-hidden /><span className="truncate">{u.email}</span>
                 </a>

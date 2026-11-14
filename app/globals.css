@@ -383,4 +383,13 @@ textarea::placeholder,
 /* Phone cards (the table's stack layout under 960px) leave out columns marked mobile: false. */
 @media (max-width: 960px) {
   .p-datatable .p-datatable-tbody > tr > td.col-desktop-only { display: none !important; }
+  /* A card is not scrolled sideways: the pinned Actions column sits in it like any other line. */
+  .p-datatable .p-frozen-column { position: static !important; }
+}
+
+/* The Actions column is pinned to the right (PrimeReactDataTable): its cell takes its row's own colour (white, striped,
+   hovered, ticked), so the columns scrolling under it never show through, and a hairline marks the edge. */
+@media (min-width: 961px) {
+  .p-datatable .p-datatable-tbody > tr > td.p-frozen-column { background: inherit; box-shadow: inset 1px 0 0 var(--border-color); }
+  .p-datatable .p-datatable-thead > tr > th.p-frozen-column { box-shadow: inset 1px 0 0 var(--border-color); }
 }

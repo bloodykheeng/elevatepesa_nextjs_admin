@@ -156,7 +156,10 @@ export default function OrderFormDialog({ visible, onHide, onSaved, editId = nul
       onHide={close}
       style={{ width: "min(46rem, 96vw)" }}
       modal
-      footer={
+      footer={loading ? (
+        // Loading the order to edit: nothing to save yet, so no total and no save button that reads like "create".
+        <div className="flex justify-end"><Button label="Cancel" text onClick={onHide} /></div>
+      ) : (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="m-0 text-sm text-(--text-secondary)">
             Charged: <b className="text-(--text-primary)">{ugx(charge)}</b>
@@ -164,11 +167,11 @@ export default function OrderFormDialog({ visible, onHide, onSaved, editId = nul
           </p>
           <div className="flex gap-2">
             <Button label="Cancel" text onClick={close} disabled={save.isPending} />
-            <Button label={order ? "Save" : "Enter order"} icon="pi pi-check" loading={save.isPending} disabled={loading}
+            <Button label={editId ? "Save" : "Enter order"} icon="pi pi-check" loading={save.isPending}
               onClick={handleSubmit((v) => confirmSubmit(order ? `the changes to order #${order.order_number}` : `an order of ${ugx(charge)} for ${v.customer?.label}`, () => save.mutateAsync(v)), () => toast.error("Some fields need attention."))} />
           </div>
         </div>
-      }
+      )}
     >
       {loading ? <div className="h-72 animate-pulse rounded-xl bg-(--border-color)" aria-label="Loading" /> : (
       <form className="space-y-7" onSubmit={(e) => e.preventDefault()}>

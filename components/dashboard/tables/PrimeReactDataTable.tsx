@@ -573,7 +573,9 @@ const PrimeReactDataTable = <T extends DataItem>({
                 severity={action.severity}
                 disabled={!!why}
                 tooltip={why ? undefined : action.tooltip}
-                tooltipOptions={{ position: "top" }}
+                // To the left: the actions sit at the right edge, where a tooltip above is pushed back on screen and
+                // its arrow no longer points at the button (the user, 14 Nov 2026).
+                tooltipOptions={{ position: "left" }}
                 // An icon alone has no name: screen readers (and tests) read the tooltip's words.
                 aria-label={action.tooltip}
                 onClick={() => action.onClick(rowData)}
@@ -801,6 +803,9 @@ const PrimeReactDataTable = <T extends DataItem>({
               header="Actions"
               headerClassName="text-xs! font-semibold! uppercase! tracking-wider! text-!(--text-muted) bg-!(--bg-page)"
               style={{ minWidth: "7rem" }}
+              // Pinned to the right: the buttons stay in view while wide lists scroll under them (globals.css).
+              frozen
+              alignFrozen="right"
             />
           ) : null}
         </DataTable>

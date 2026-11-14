@@ -34,6 +34,12 @@ Rules every list keeps: View (the eye) before Edit on every row; filters in one 
 a column most rows leave empty starts hidden; money with `ugx()`, times with `dateTime()` (Kampala clock);
 statuses with `<Pill>` (one colour per meaning everywhere).
 
+**Row buttons stay in view** (14 Nov 2026): the Actions column is pinned to the right (`frozen alignFrozen="right"` in
+`PrimeReactDataTable`), its cell takes the row's colour with a hairline at its edge (`app/globals.css`), it is unpinned in
+the phone card layout, and row tooltips open to the left so their arrow points at the button. Columns that repeat
+another start hidden (Orders: Paid; Packages: Status; Accounts: Push, Joined). The same pattern for other projects:
+`coding-notes/nextjs/primereact-datatable-pinned-actions.md`.
+
 ## Forms
 
 `RecordForm` (`components/dashboard/admin/RecordForm.tsx`) takes numbered `sections` of fields
