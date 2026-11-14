@@ -8,14 +8,16 @@ import { adminApi } from "@/services/admin";
 import { dateTime, ugx } from "@/lib/format";
 import type { Package } from "@/services/types/pesa";
 import { PeekLink } from "./peek";
-import { DetailsFooter, PaymentsSection, StatTile, n } from "./shared";
+import { DetailsFooter, PaymentsSection, StatTile, n, type PaymentActions } from "./shared";
 
 /** One package delivery: the customer, the route, where it stands, its payments. */
-export function PackageDetailsDialog({ id, visible, onHide, actions }: {
+export function PackageDetailsDialog({ id, visible, onHide, actions, payments }: {
   id: number | string | null | undefined;
   visible: boolean;
   onHide: () => void;
   actions?: (pkg: Package) => React.ReactNode;
+  /** Record the next instalment, correct or delete one (the Packages page). */
+  payments?: (pkg: Package) => PaymentActions;
 }) {
   const q = useQuery({ queryKey: ["packages", "one", String(id)], queryFn: () => adminApi.package(Number(id)), enabled: visible && !!id, meta: VIEW_META });
   const p = q.data ?? null;
@@ -62,7 +64,7 @@ export function PackageDetailsDialog({ id, visible, onHide, actions }: {
       ] : []}
       footer={<DetailsFooter onHide={onHide}>{p && actions?.(p)}</DetailsFooter>}
     >
-      {p && <PaymentsSection payments={p.payments} kind="package-payment" />}
+      {p && <PaymentsSection payments={p.payments} kind="package-payment" balance={p.status !== "cancelled" ? n(p.balance_due) : 0} actions={payments?.(p)} />}
     </RecordDetailsDialog>
   );
 }

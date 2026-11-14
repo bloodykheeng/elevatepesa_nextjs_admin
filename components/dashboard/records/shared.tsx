@@ -24,21 +24,46 @@ export function StatTile({ label, value, tone }: { label: string; value: React.R
   );
 }
 
+/** What the Orders and Packages pages let you do with an order's or a package's payments, from its details. */
+export type PaymentActions = {
+  /** Shown while something is owed. */
+  onRecord?: () => void;
+  onEdit?: (payment: Payment) => void;
+  /** Admins only. */
+  onDelete?: (payment: Payment) => void;
+};
+
 /**
- * The payments on an order or a package. Each says what its numbers are ("Transaction no. 7546..."), never a bare
- * number beside the amount (the user, 14 Nov 2026), and opens its own details.
+ * The payments on an order or a package: one payment or many instalments. Each says what its numbers are
+ * ("Transaction no. 7546..."), never a bare number beside the amount (the user, 14 Nov 2026), and opens its own
+ * details; on the Orders and Packages pages it also records the next instalment and corrects or deletes one.
  */
-export function PaymentsSection({ payments, kind }: { payments: Payment[] | undefined; kind: "payment" | "package-payment" }) {
+export function PaymentsSection({ payments, kind, balance = 0, actions }: {
+  payments: Payment[] | undefined;
+  kind: "payment" | "package-payment";
+  /** Still owed: shown beside the heading with the way to pay it. */
+  balance?: number;
+  actions?: PaymentActions;
+}) {
   const { open } = usePeek();
+  const count = payments?.length ?? 0;
   return (
     <section>
-      <h3 className="m-0 mb-2 text-sm font-semibold text-(--text-primary)">Payments{payments?.length ? ` (${payments.length})` : ""}</h3>
-      {payments?.length ? (
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <h3 className="m-0 text-sm font-semibold text-(--text-primary)">
+          Payments{count ? ` (${count})` : ""}
+          {balance > 0 && <span className="ml-2 font-normal text-red-600 dark:text-red-400">{ugx(balance)} still owed</span>}
+        </h3>
+        {actions?.onRecord && balance > 0 && (
+          <Button label={count ? "Record another instalment" : "Record a payment"} icon="pi pi-wallet" size="small" outlined onClick={actions.onRecord} />
+        )}
+      </div>
+      {count ? (
         <ul className="divide-y divide-(--border-color) overflow-hidden rounded-xl border border-(--border-color)">
-          {payments.map((p) => (
-            <li key={p.id}>
+          {payments!.map((p) => (
+            <li key={p.id} className="flex items-stretch">
               <button type="button" onClick={() => open(kind, p.id)} title="Open this payment"
-                className="flex w-full cursor-pointer flex-wrap items-center justify-between gap-x-4 gap-y-1 border-0 bg-transparent px-3 py-2.5 text-left text-sm hover:bg-(--bg-page)">
+                className="flex min-w-0 flex-1 cursor-pointer flex-wrap items-center justify-between gap-x-4 gap-y-1 border-0 bg-transparent px-3 py-2.5 text-left text-sm hover:bg-(--bg-page)">
                 <span className="min-w-0">
                   <span className="font-bold text-(--text-primary)">{ugx(n(p.amount))}</span>
                   <span className="text-(--text-secondary)"> · {methodLabel(p.payment_method)}</span>
@@ -46,11 +71,16 @@ export function PaymentsSection({ payments, kind }: { payments: Payment[] | unde
                     <span className="block text-xs text-(--text-muted)">Transaction no. <span className="font-mono">{p.transaction_number}</span></span>
                   )}
                 </span>
-                <span className="flex items-center gap-2 text-xs text-(--text-muted)">
+                <span className="text-xs text-(--text-muted)">
                   {dateTime(p.created_at)}{p.created_by?.name ? ` · recorded by ${p.created_by.name}` : ""}
-                  <i className="pi pi-angle-right text-xs" aria-hidden />
                 </span>
               </button>
+              {(actions?.onEdit || actions?.onDelete) && (
+                <span className="flex shrink-0 items-center gap-1 pr-2">
+                  {actions.onEdit && <Button icon="pi pi-pencil" text rounded size="small" aria-label="Correct this payment" tooltip="Correct" tooltipOptions={{ position: "top" }} onClick={() => actions.onEdit!(p)} />}
+                  {actions.onDelete && <Button icon="pi pi-trash" text rounded size="small" severity="danger" aria-label="Delete this payment" tooltip="Delete" tooltipOptions={{ position: "top" }} onClick={() => actions.onDelete!(p)} />}
+                </span>
+              )}
             </li>
           ))}
         </ul>

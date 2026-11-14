@@ -11,7 +11,9 @@ import { CustomerContextBar } from "@/components/dashboard/records/shared";
 import { PeekLink } from "@/components/dashboard/records/peek";
 import { PageHeader } from "@/components/dashboard/ui";
 import RecordForm, { useOptions } from "@/components/dashboard/admin/RecordForm";
-import PaymentDialog from "@/components/dashboard/admin/PaymentDialog";
+import { usePaymentFlows } from "@/components/dashboard/admin/usePaymentFlows";
+import type { Section } from "@/components/dashboard/admin/RecordForm";
+import { LuWallet } from "react-icons/lu";
 import { useAdminList } from "@/components/dashboard/admin/useAdminList";
 import { ListSearch, Pill, Thumb, choices } from "@/components/dashboard/admin/parts";
 import { adminApi } from "@/services/admin";
@@ -32,7 +34,6 @@ export default function PackagesList() {
   const list = useAdminList<Package>({ path: "packages", filterKeys: ["status", "payment_status", "delivery_status", "has_balance", "customer", "from", "to"] });
   const [editing, setEditing] = useState<Package | null>(null);
   const [creating, setCreating] = useState(false);
-  const [paying, setPaying] = useState<Package | null>(null);
 
 
   const refreshAll = () => {
@@ -40,6 +41,35 @@ export default function PackagesList() {
     queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     queryClient.invalidateQueries({ queryKey: ["package-payments"] });
   };
+  const money = usePaymentFlows("package", refreshAll);
+  const canPay = (p: Package) => n(p.balance_due) > 0 && p.status !== "cancelled";
+
+  /**
+   * New and Edit are one set of fields, so editing changes everything entering set: the customer (its payments move
+   * too), when it was booked, what it is, the route, the price and where it stands.
+   */
+  const sections = (edit: Package | null): Section[] => [
+    { title: "Who and when", hint: edit ? undefined : "For a package the app lost, put the day and time it was really booked.", fields: [
+      { name: "customer_id", label: "Customer", type: "customer", required: true, from: "created_by" },
+      { name: "placed_at", label: "Booked", type: "moment", from: "created_at", hint: edit ? "Pick the day, then reopen it to set the time." : "Leave empty for now. Pick the day, then reopen it to set the time." },
+    ] },
+    { title: "The package", fields: [
+      { name: "name", label: "What it is", type: "text", required: true },
+      { name: "pickup", label: "Pickup", type: "text", required: true },
+      { name: "destination", label: "Destination", type: "text", required: true },
+      { name: "extraInfo", label: "Notes", type: "textarea" },
+    ] },
+    { title: "Price", hint: edit
+      ? `Paid so far ${ugx(n(edit.amount_paid))}: the price cannot go below it. The balance follows the price; payments (one or several instalments) are recorded on the package.`
+      : "Nothing is paid yet: record payments on the package once it is entered, one or several instalments, each on the day it was paid.", fields: [
+      { name: "charged_amount", label: "Charged", type: "money", required: true },
+    ] },
+    { title: "Where it stands", hint: edit ? "Changing the delivery sends the customer a message." : undefined, fields: [
+      { name: "status", label: "Status", type: "status", values: options.data?.package_statuses ?? [], required: true },
+      { name: "delivery_status", label: "Delivery", type: "status", values: options.data?.package_delivery_statuses ?? [], required: true },
+      ...(edit ? [{ name: "payment_status", label: "Payment", type: "status" as const, values: options.data?.package_payment_statuses ?? [], required: true, hint: "Recording payments sets this for you when the balance reaches zero." }] : []),
+    ] },
+  ];
 
   const filterGroups: FilterGroup[] = [
     { title: "Where it stands", fields: [
@@ -116,7 +146,11 @@ export default function PackagesList() {
             <FiltersButton groups={filterGroups} values={filterValuesFrom(filterGroups, list.getParam)} onApply={list.setFilters} />
           </div>
         }
-        rowActions={[viewAction<Package>((p) => list.openView(p.id)), editAction<Package>((p) => setEditing(p))]}
+        rowActions={[
+          viewAction<Package>((p) => list.openView(p.id)),
+          editAction<Package>((p) => setEditing(p)),
+          { key: "pay", icon: <LuWallet />, tooltip: "Record a payment", severity: "success", onClick: (p) => money.record(p), hidden: (p) => !canPay(p) },
+        ]}
         selection={{ selected: list.selected, onChange: list.setSelected }}
         toolbarActions={[
           deleteSelectedAction<Package>(() => list.confirmDelete("package", "Packages with payments are kept: cancel those instead.")),
@@ -128,10 +162,11 @@ export default function PackagesList() {
         id={list.viewId}
         visible={!!list.viewId}
         onHide={list.closeView}
+        payments={money.actionsFor}
         actions={(p) => (
           <>
             <Button label="Edit" icon="pi pi-pencil" outlined onClick={() => setEditing(p)} />
-            {n(p.balance_due) > 0 && p.status !== "cancelled" && <Button label="Record payment" icon="pi pi-wallet" onClick={() => setPaying(p)} />}
+            {canPay(p) && <Button label="Record payment" icon="pi pi-wallet" onClick={() => money.record(p)} />}
           </>
         )}
       />
@@ -141,20 +176,7 @@ export default function PackagesList() {
         onHide={() => setEditing(null)}
         record={editing as Row | null}
         title={editing ? `package "${editing.name}"` : "package"}
-        sections={[
-          { title: "The package", fields: [
-            { name: "name", label: "Name", type: "text", required: true },
-            { name: "pickup", label: "Pickup", type: "text" },
-            { name: "destination", label: "Destination", type: "text" },
-            { name: "extraInfo", label: "Notes", type: "textarea" },
-          ] },
-          { title: "Price", hint: "The balance follows the price.", fields: [{ name: "charged_amount", label: "Charged", type: "money", required: true }] },
-          { title: "Where it stands", hint: "Changing the delivery sends the customer a message.", fields: [
-            { name: "status", label: "Status", type: "status", values: options.data?.package_statuses ?? [], required: true },
-            { name: "delivery_status", label: "Delivery", type: "status", values: options.data?.package_delivery_statuses ?? [], required: true },
-            { name: "payment_status", label: "Payment", type: "status", values: options.data?.package_payment_statuses ?? [], required: true },
-          ] },
-        ]}
+        sections={sections(editing)}
         photo={{}}
         save={(body, id) => adminApi.updatePackage(id!, body) as Promise<{ message: string; data: Row }>}
         invalidate={["packages", "dashboard"]}
@@ -169,25 +191,7 @@ export default function PackagesList() {
         onHide={() => setCreating(false)}
         record={null}
         title="package"
-        sections={[
-          { title: "Who and when", hint: "For a package the app lost, put the day and time it was really booked.", fields: [
-            { name: "customer_id", label: "Customer", type: "customer", required: true },
-            { name: "placed_at", label: "Booked", type: "moment", hint: "Leave empty for now." },
-          ] },
-          { title: "The package", fields: [
-            { name: "name", label: "What it is", type: "text", required: true },
-            { name: "pickup", label: "Pickup", type: "text", required: true },
-            { name: "destination", label: "Destination", type: "text", required: true },
-            { name: "extraInfo", label: "Notes", type: "textarea" },
-          ] },
-          { title: "Price", hint: "Nothing is paid yet: record payments on the package once it is entered, each on the day it was paid.", fields: [
-            { name: "charged_amount", label: "Charged", type: "money", required: true },
-          ] },
-          { title: "Where it stands", fields: [
-            { name: "status", label: "Status", type: "status", values: options.data?.package_statuses ?? [], required: true },
-            { name: "delivery_status", label: "Delivery", type: "status", values: options.data?.package_delivery_statuses ?? [], required: true },
-          ] },
-        ]}
+        sections={sections(null)}
         photo={{}}
         save={(body) => adminApi.createPackage(body) as Promise<{ message: string; data: Row }>}
         invalidate={["packages", "dashboard"]}
@@ -195,16 +199,7 @@ export default function PackagesList() {
         onSaved={(p) => { refreshAll(); list.openView(p.id); }}
       />
 
-      {paying && (
-        <PaymentDialog
-          visible={!!paying}
-          onHide={() => setPaying(null)}
-          balance={n(paying.balance_due)}
-          reference={`package "${paying.name}"`}
-          submit={(body) => adminApi.recordPackagePayment(paying.id, body)}
-          onSaved={refreshAll}
-        />
-      )}
+      {money.dialog}
     </div>
   );
 }

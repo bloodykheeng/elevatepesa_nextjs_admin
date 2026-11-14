@@ -43,6 +43,10 @@ export type FieldDef = {
   when?: (values: Record<string, unknown>) => boolean;
   /** For a "select" narrowed by another field: keep only options whose `parentKey` equals values[parentField]. */
   parent?: { field: string; key: string };
+  /** Read the starting value from another key of the record (a "moment" `placed_at` starts from `created_at`). */
+  from?: string;
+  /** For "moment": no day before this (an instant). */
+  min?: string | null;
 };
 
 export type Section = { title: string; hint?: string; fields: FieldDef[] };
@@ -92,7 +96,13 @@ export default function RecordForm<T extends { id: number }>({
   const initial = useMemo(() => {
     const v: Record<string, unknown> = {};
     fields.forEach((f) => {
-      if (f.type === "customer" || f.type === "moment") { v[f.name] = null; return; }
+      if (f.type === "customer" || f.type === "moment") {
+        const start = record?.[f.from ?? f.name] as { id: number; name: string; phone?: string | null } | string | null | undefined;
+        v[f.name] = f.type === "customer"
+          ? (start && typeof start === "object" ? ({ label: start.name, value: String(start.id), note: start.phone ?? undefined } as Option) : null)
+          : (typeof start === "string" ? start : null);
+        return;
+      }
       const raw = f.type === "password" ? "" : record?.[f.name] ?? defaults?.[f.name] ?? (f.type === "status" ? (f.values ?? ["active"])[0] : null);
       v[f.name] = f.type === "number" || f.type === "money" || f.type === "select" ? (raw === null || raw === "" || raw === undefined ? null : Number(raw)) : raw ?? "";
     });
@@ -178,7 +188,7 @@ export default function RecordForm<T extends { id: number }>({
                 return <InfiniteSelect {...customerPicker} value={field.value as Option | null} onChange={field.onChange} invalid={!!err}
                   placeholder="Choose the customer" searchPlaceholder="Name, phone or email" />;
               case "moment":
-                return <PlacedAtField id={f.name} label={f.label} value={(field.value as string | null) ?? null} onChange={field.onChange} />;
+                return <PlacedAtField id={f.name} label={f.label} value={(field.value as string | null) ?? null} onChange={field.onChange} min={f.min} />;
               case "email":
                 return <InputText id={f.name} type="email" value={String(field.value ?? "")} onChange={(e) => field.onChange(e.target.value)} className="w-full" />;
               default:

@@ -149,16 +149,22 @@ export const MANUAL: ManualChapter[] = [
             body: "Search by order number, customer name, phone or address. Filters narrow by status, payment, delivery, payment mode, balance and dates; each filter shows as a chip you can clear.",
           },
           {
-            title: "Change status or delivery",
-            body: "Open an order with the eye, then Edit. When you change the delivery status the customer gets a message on their phone.",
+            title: "Edit an order",
+            body: "The pencil (or Edit in its details) opens the whole order, the same form as New: the customer, when it was placed, the address, the items, what is charged, the payment mode and where it stands. It works for orders placed in the app too. When you change the delivery status the customer gets a message on their phone.",
+            notes: [
+              "Changing the items moves stock: removed items go back, added ones come out. Untick Move stock for the item changes if the count is already right.",
+              "Charged follows the items' total until you type your own (a delivery fee, a discount); Use the items' total puts it back. It can never go below what is already paid.",
+              "The placed date cannot be after the order's first payment.",
+            ],
           },
           {
-            title: "Record a payment",
-            body: "Open the order and press Record payment. Enter the amount, how it was paid and the transaction number. The balance updates at once, and the customer gets a message.",
+            title: "Record a payment, or pay in instalments",
+            body: "Press the wallet on the order's row, Record payment in its details, or Record a payment in its Payments section. Enter the amount, how it was paid and the transaction number. Pay the whole balance at once, or part of it: the rest stays owed and Record another instalment adds the next part. The balance updates at once, and the customer gets a message.",
             notes: [
               "You cannot record more than the balance due.",
               "When the balance reaches zero the order becomes Completed.",
-              "Paid on: leave it empty for money received now. For a payment made earlier (re-entering a lost one), put the day and time it was paid: it is dated then, and the customer gets no message.",
+              "Paid on: leave it empty for money received now. For a payment made earlier (re-entering a lost one), pick the day, then reopen it to set the time: it is dated then, and the customer gets no message. It cannot be before the order was placed.",
+              "A payment entered wrongly: the pencil beside it in the Payments section corrects it (amount, method, reference, date). Admins can delete one with the bin: the balance grows back by that amount.",
             ],
           },
           {
@@ -181,7 +187,7 @@ export const MANUAL: ManualChapter[] = [
           },
           {
             title: "Price and follow a package",
-            body: "Open a package and press Edit to set what it costs (Charged), its status and its delivery. The balance follows the price. Record payments from the package the same way as for an order.",
+            body: "The pencil opens the whole package, the same form as New: the customer, when it was booked, what it is, the route, the price (Charged), its status, delivery and payment. The balance follows the price, which cannot go below what is paid. Record payments (one, or several instalments), correct or delete them from the package the same way as for an order.",
           },
         ],
       },

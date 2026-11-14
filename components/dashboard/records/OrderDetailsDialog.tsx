@@ -8,18 +8,20 @@ import { adminApi } from "@/services/admin";
 import { dateTime, ugx } from "@/lib/format";
 import type { Order } from "@/services/types/pesa";
 import { PeekLink } from "./peek";
-import { DetailsFooter, PaymentsSection, StatTile, n } from "./shared";
+import { DetailsFooter, PaymentsSection, StatTile, n, type PaymentActions } from "./shared";
 
 /**
  * One order: who ordered, where it stands, its items and payments. The Orders page opens it with its own buttons
  * (Edit, Record payment); anywhere else it opens over what you are reading (RecordPeekHost).
  */
-export function OrderDetailsDialog({ id, visible, onHide, actions }: {
+export function OrderDetailsDialog({ id, visible, onHide, actions, payments }: {
   id: number | string | null | undefined;
   visible: boolean;
   onHide: () => void;
   /** After Close in the footer. */
   actions?: (order: Order) => React.ReactNode;
+  /** Record the next instalment, correct or delete one (the Orders page). */
+  payments?: (order: Order) => PaymentActions;
 }) {
   const q = useQuery({ queryKey: ["orders", "one", String(id)], queryFn: () => adminApi.order(Number(id)), enabled: visible && !!id, meta: VIEW_META });
   const o = q.data ?? null;
@@ -85,7 +87,7 @@ export function OrderDetailsDialog({ id, visible, onHide, actions }: {
               </table>
             </div>
           </section>
-          <PaymentsSection payments={o.payments} kind="payment" />
+          <PaymentsSection payments={o.payments} kind="payment" balance={o.status !== "cancelled" ? n(o.balance_due) : 0} actions={payments?.(o)} />
         </div>
       )}
     </RecordDetailsDialog>

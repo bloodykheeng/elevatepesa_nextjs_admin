@@ -10,15 +10,15 @@ import { OrderDetailsDialog } from "@/components/dashboard/records/OrderDetailsD
 import { CustomerContextBar } from "@/components/dashboard/records/shared";
 import { PeekLink } from "@/components/dashboard/records/peek";
 import { PageHeader } from "@/components/dashboard/ui";
-import RecordForm, { useOptions } from "@/components/dashboard/admin/RecordForm";
-import PaymentDialog from "@/components/dashboard/admin/PaymentDialog";
-import NewOrderDialog from "@/components/dashboard/admin/NewOrderDialog";
+import { useOptions } from "@/components/dashboard/admin/RecordForm";
+import OrderFormDialog from "@/components/dashboard/admin/OrderFormDialog";
+import { usePaymentFlows } from "@/components/dashboard/admin/usePaymentFlows";
 import { ORDER_ITEM_KEYS, useOrderItemGroup } from "@/components/dashboard/admin/orderFilters";
 import { useAdminList } from "@/components/dashboard/admin/useAdminList";
 import { ListSearch, Pill, choices, modeLabel } from "@/components/dashboard/admin/parts";
-import { adminApi } from "@/services/admin";
 import type { Order } from "@/services/types/pesa";
 import { asDate, type ExportColumn } from "@/lib/exportRows";
+import { LuWallet } from "react-icons/lu";
 import { dateTime, ugx } from "@/lib/format";
 
 const n = (v: unknown) => Number(v ?? 0);
@@ -33,9 +33,8 @@ export default function OrdersList() {
   const options = useOptions();
   const queryClient = useQueryClient();
   const list = useAdminList<Order>({ path: "orders", filterKeys: FILTER_KEYS });
-  const [editing, setEditing] = useState<Order | null>(null);
-  const [paying, setPaying] = useState<Order | null>(null);
-  const [creating, setCreating] = useState(false);
+  // One form for New and Edit: null = closed, 0 = new, an id = editing that order.
+  const [formId, setFormId] = useState<number | null>(null);
 
 
   const itemGroup = useOrderItemGroup();
@@ -58,6 +57,7 @@ export default function OrdersList() {
     queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     queryClient.invalidateQueries({ queryKey: ["payments"] });
   };
+  const money = usePaymentFlows("order", refreshAll);
 
   const columns = [
     {
@@ -125,11 +125,15 @@ export default function OrdersList() {
             <FiltersButton groups={filterGroups} values={filterValuesFrom(filterGroups, list.getParam)} onApply={list.setFilters} />
           </div>
         }
-        rowActions={[viewAction<Order>((o) => list.openView(o.id)), editAction<Order>((o) => setEditing(o))]}
+        rowActions={[
+          viewAction<Order>((o) => list.openView(o.id)),
+          editAction<Order>((o) => setFormId(o.id)),
+          { key: "pay", icon: <LuWallet />, tooltip: "Record a payment", severity: "success", onClick: (o) => money.record(o), hidden: (o) => !canPay(o) },
+        ]}
         selection={{ selected: list.selected, onChange: list.setSelected }}
         toolbarActions={[
           deleteSelectedAction<Order>(() => list.confirmDelete("order", "Orders with payments are kept: cancel those instead. Deleting removes the order and its items for good.")),
-          createAction<Order>(() => setCreating(true)),
+          createAction<Order>(() => setFormId(0)),
         ]}
       />
 
@@ -137,45 +141,23 @@ export default function OrdersList() {
         id={list.viewId}
         visible={!!list.viewId}
         onHide={list.closeView}
+        payments={money.actionsFor}
         actions={(o) => (
           <>
-            <Button label="Edit" icon="pi pi-pencil" outlined onClick={() => setEditing(o)} />
-            {canPay(o) && <Button label="Record payment" icon="pi pi-wallet" onClick={() => setPaying(o)} />}
+            <Button label="Edit" icon="pi pi-pencil" outlined onClick={() => setFormId(o.id)} />
+            {canPay(o) && <Button label="Record payment" icon="pi pi-wallet" onClick={() => money.record(o)} />}
           </>
         )}
       />
 
-      <RecordForm<Order & Record<string, unknown>>
-        visible={!!editing}
-        onHide={() => setEditing(null)}
-        record={editing as (Order & Record<string, unknown>) | null}
-        title={editing ? `order #${editing.order_number}` : "order"}
-        sections={[
-          { title: "Where it stands", hint: "Changing the delivery sends the customer a message on their phone.", fields: [
-            { name: "status", label: "Status", type: "status", values: options.data?.order_statuses ?? [], required: true },
-            { name: "delivery_status", label: "Delivery", type: "status", values: options.data?.order_delivery_statuses ?? [], required: true },
-            { name: "payment_status", label: "Payment", type: "status", values: options.data?.order_payment_statuses ?? [], required: true, hint: "Recording payments sets this for you when the balance reaches zero." },
-          ] },
-          { title: "Delivery address", fields: [{ name: "address", label: "Address", type: "text" }] },
-        ]}
-        save={(body, id) => adminApi.updateOrder(id!, body) as Promise<{ message: string; data: Order & Record<string, unknown> }>}
-        invalidate={["orders", "dashboard"]}
-        what="this order"
-        onSaved={refreshAll}
+      <OrderFormDialog
+        visible={formId !== null}
+        editId={formId || null}
+        onHide={() => setFormId(null)}
+        onSaved={(o) => { refreshAll(); list.openView(o.id); }}
       />
 
-      <NewOrderDialog visible={creating} onHide={() => setCreating(false)} onSaved={(o) => { refreshAll(); list.openView(o.id); }} />
-
-      {paying && (
-        <PaymentDialog
-          visible={!!paying}
-          onHide={() => setPaying(null)}
-          balance={n(paying.balance_due)}
-          reference={`order #${paying.order_number}`}
-          submit={(body) => adminApi.recordOrderPayment(paying.id, body)}
-          onSaved={refreshAll}
-        />
-      )}
+      {money.dialog}
     </div>
   );
 }

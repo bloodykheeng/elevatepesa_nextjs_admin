@@ -58,21 +58,33 @@ export function CustomerDetailsDialog({ id, visible, onHide, actions }: {
       loading={q.isPending}
       error={viewError(q, "account")}
       top={u && (
-        <div className="flex flex-col gap-4 rounded-xl border border-(--border-color) p-4 sm:flex-row sm:items-center">
-          <div className="flex min-w-0 flex-1 items-center gap-4">
-            <Thumb src={u.photo_url} name={u.name} size="h-16 w-16" round />
-            <div className="min-w-0 space-y-1">
-              <div className="flex flex-wrap items-center gap-1.5">
+        // Two rows, not one band: who they are and how to reach them, then what they ordered and owe, each with room
+        // (the one-band version squeezed three pills, two contact lines and three figures together, the user, 14/11/2026).
+        <div className="space-y-3">
+          <div className="flex items-center gap-4 rounded-xl border border-(--border-color) p-4">
+            <Thumb src={u.photo_url} name={u.name} size="h-14 w-14" round />
+            <div className="min-w-0 flex-1 space-y-2">
+              <p className="m-0 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-(--text-secondary)">
+                <span className="font-medium text-(--text-primary)">{u.role ?? "No role"}</span>
                 <Pill value={u.status} />
-                <span className="rounded-full bg-(--bg-page) px-2 py-0.5 text-xs font-semibold text-(--text-secondary)">{u.role ?? "No role"}</span>
-                {u.has_device && <span className="inline-flex items-center gap-1 rounded-full bg-(--brand-light) px-2 py-0.5 text-xs font-semibold text-(--brand-ink)" title="Has the app on a phone: can get push messages"><i className="pi pi-mobile text-[10px]" aria-hidden />App</span>}
+                {u.has_device && (
+                  <span className="inline-flex items-center gap-1" title="Has the app on a phone: can get push messages"><i className="pi pi-mobile text-xs" aria-hidden />Has the app</span>
+                )}
+              </p>
+              <div className="flex flex-col gap-1 text-sm sm:flex-row sm:flex-wrap sm:gap-x-6">
+                <a href={`mailto:${u.email}`} className="inline-flex min-w-0 items-center gap-2 text-(--text-secondary) no-underline hover:underline">
+                  <i className="pi pi-envelope text-xs text-(--text-muted)" aria-hidden /><span className="truncate">{u.email}</span>
+                </a>
+                {u.phone && (
+                  <a href={`tel:${u.phone}`} className="inline-flex items-center gap-2 text-(--text-secondary) no-underline hover:underline">
+                    <i className="pi pi-phone text-xs text-(--text-muted)" aria-hidden />{u.phone}
+                  </a>
+                )}
               </div>
-              <a href={`mailto:${u.email}`} className="block truncate text-sm text-(--text-secondary) no-underline hover:underline">{u.email}</a>
-              {u.phone && <a href={`tel:${u.phone}`} className="block text-sm text-(--text-secondary) no-underline hover:underline">{u.phone}</a>}
             </div>
           </div>
           {u.totals && (
-            <div className="grid grid-cols-3 gap-2 sm:flex sm:shrink-0 sm:[&>*]:min-w-24">
+            <div className="grid grid-cols-3 gap-2">
               <StatTile label="Orders" value={(u.orders_count ?? 0).toLocaleString("en-UG")} />
               <StatTile label="Ordered" value={ugx(u.totals.orders_value)} />
               <StatTile label="Still owes" value={ugx(u.totals.balance_due)} tone={u.totals.balance_due > 0 ? "red" : undefined} />
