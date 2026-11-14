@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "primereact/button";
 import { useQueryClient } from "@tanstack/react-query";
-import PrimeReactDataTable, { deleteSelectedAction, editAction, viewAction } from "@/components/dashboard/tables/PrimeReactDataTable";
+import PrimeReactDataTable, { createAction, deleteSelectedAction, editAction, viewAction } from "@/components/dashboard/tables/PrimeReactDataTable";
 import FiltersButton, { filterValuesFrom, type FilterGroup } from "@/components/dashboard/filters/FiltersButton";
 import { auditColumns, auditExportColumns } from "@/components/dashboard/audit";
 import { PackageDetailsDialog } from "@/components/dashboard/records/PackageDetailsDialog";
@@ -31,6 +31,7 @@ export default function PackagesList() {
   const queryClient = useQueryClient();
   const list = useAdminList<Package>({ path: "packages", filterKeys: ["status", "payment_status", "delivery_status", "has_balance", "customer", "from", "to"] });
   const [editing, setEditing] = useState<Package | null>(null);
+  const [creating, setCreating] = useState(false);
   const [paying, setPaying] = useState<Package | null>(null);
 
 
@@ -76,6 +77,7 @@ export default function PackagesList() {
     { field: "delivery_status", header: "Delivery", body: (p: Package) => <Pill value={p.delivery_status} /> },
     { field: "payment_status", mobile: false, header: "Payment", body: (p: Package) => <Pill value={p.payment_status} /> },
     { field: "package_number", mobile: false, header: "Number", sortable: true, visible: false },
+    { field: "entered_by", mobile: false, header: "Entered by", visible: false, body: (p: Package) => p.entered_by?.name ?? <span className="text-(--text-muted)">The app</span> },
     ...auditColumns<Package>({ people: false, created: false }),
   ];
 
@@ -93,12 +95,13 @@ export default function PackagesList() {
     { header: "Status", value: (p) => p.status },
     { header: "Delivery", value: (p) => p.delivery_status ?? "" },
     { header: "Payment", value: (p) => p.payment_status ?? "" },
+    { header: "Entered by", value: (p) => p.entered_by?.name ?? "The app" },
     ...auditExportColumns<Package>({ people: false }),
   ];
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Packages" subtitle="Deliveries customers book in the app. Set the price, follow the delivery, record payments." />
+      <PageHeader title="Packages" subtitle="Deliveries customers book in the app, and ones staff entered. Set the price, follow the delivery, record payments." />
       <CustomerContextBar onClear={() => list.setFilters({ customer: "" })} />
       <PrimeReactDataTable<Package>
         data={list.rows}
@@ -115,7 +118,10 @@ export default function PackagesList() {
         }
         rowActions={[viewAction<Package>((p) => list.openView(p.id)), editAction<Package>((p) => setEditing(p))]}
         selection={{ selected: list.selected, onChange: list.setSelected }}
-        toolbarActions={[deleteSelectedAction<Package>(() => list.confirmDelete("package", "Packages with payments are kept: cancel those instead."))]}
+        toolbarActions={[
+          deleteSelectedAction<Package>(() => list.confirmDelete("package", "Packages with payments are kept: cancel those instead.")),
+          createAction<Package>(() => setCreating(true)),
+        ]}
       />
 
       <PackageDetailsDialog
@@ -154,6 +160,39 @@ export default function PackagesList() {
         invalidate={["packages", "dashboard"]}
         what="this package"
         onSaved={refreshAll}
+      />
+
+      {/* A delivery the customer did not book in the app (re-entering one the Hostinger loss took, or a phone booking):
+          dated when it was booked, nothing paid yet, nobody messaged. Its details open next, to record payments. */}
+      <RecordForm<Row>
+        visible={creating}
+        onHide={() => setCreating(false)}
+        record={null}
+        title="package"
+        sections={[
+          { title: "Who and when", hint: "For a package the app lost, put the day and time it was really booked.", fields: [
+            { name: "customer_id", label: "Customer", type: "customer", required: true },
+            { name: "placed_at", label: "Booked", type: "moment", hint: "Leave empty for now." },
+          ] },
+          { title: "The package", fields: [
+            { name: "name", label: "What it is", type: "text", required: true },
+            { name: "pickup", label: "Pickup", type: "text", required: true },
+            { name: "destination", label: "Destination", type: "text", required: true },
+            { name: "extraInfo", label: "Notes", type: "textarea" },
+          ] },
+          { title: "Price", hint: "Nothing is paid yet: record payments on the package once it is entered, each on the day it was paid.", fields: [
+            { name: "charged_amount", label: "Charged", type: "money", required: true },
+          ] },
+          { title: "Where it stands", fields: [
+            { name: "status", label: "Status", type: "status", values: options.data?.package_statuses ?? [], required: true },
+            { name: "delivery_status", label: "Delivery", type: "status", values: options.data?.package_delivery_statuses ?? [], required: true },
+          ] },
+        ]}
+        photo={{}}
+        save={(body) => adminApi.createPackage(body) as Promise<{ message: string; data: Row }>}
+        invalidate={["packages", "dashboard"]}
+        what="this package"
+        onSaved={(p) => { refreshAll(); list.openView(p.id); }}
       />
 
       {paying && (

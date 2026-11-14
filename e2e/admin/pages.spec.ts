@@ -24,7 +24,11 @@ test("the sidebar names every page and opens it", async ({ page }) => {
   await page.goto("/dashboard");
   await page.getByRole("link", { name: "Orders" }).first().click();
   await expect(page).toHaveURL(/\/dashboard\/orders/);
-  await page.getByRole("button", { name: /Gas & water setup/ }).click();
-  await page.getByRole("link", { name: "Brands" }).first().click();
+  await page.getByRole("button", { name: /Product setup/ }).click();
+  await page.getByRole("link", { name: "Gas & water brands" }).click();
   await expect(page).toHaveURL(/\/dashboard\/catalog\/category-brands/);
+  // One parent open at a time: opening "In the app" folds Product setup.
+  await page.getByRole("button", { name: /In the app/ }).click();
+  await expect(page.getByRole("link", { name: "FAQs" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Gas & water brands" })).toBeHidden();
 });

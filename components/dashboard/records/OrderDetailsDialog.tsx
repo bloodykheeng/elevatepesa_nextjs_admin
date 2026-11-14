@@ -54,6 +54,7 @@ export function OrderDetailsDialog({ id, visible, onHide, actions }: {
           ) : "-",
         },
         { label: "Placed", value: dateTime(o.created_at) },
+        ...(o.entered_by ? [{ label: "Entered by", value: `${o.entered_by.name}, from the dashboard` }] : []),
         { label: "Status", value: <Pill value={o.status} /> },
         { label: "Delivery", value: <Pill value={o.delivery_status} /> },
         { label: "Payment", value: <span className="flex flex-wrap items-center gap-2"><Pill value={o.payment_status} /> {modeLabel(o.payment_mode)}</span> },

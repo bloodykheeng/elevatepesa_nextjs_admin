@@ -134,7 +134,7 @@ export default function AuditTrailList() {
     { field: "causer", header: "Who", body: (e: AuditEntry) => <Who e={e} />, exportValue: (e: AuditEntry) => e.causer?.name ?? "" },
     { field: "event", header: "Action", sortable: true, body: (e: AuditEntry) => <Pill value={e.event} label={e.event_label} />, exportValue: (e: AuditEntry) => e.event_label },
     { field: "title", header: "Record", body: (e: AuditEntry) => <div className="max-w-xs min-w-0"><p className="m-0 truncate text-sm text-(--text-primary)">{e.title ?? e.description}</p><p className="m-0 truncate text-xs text-(--text-muted)">{e.module}</p></div>, exportValue: (e: AuditEntry) => e.title ?? "" },
-    { field: "changes_preview", header: "What changed", body: (e: AuditEntry) => <ChangedLines e={e} />, exportValue: changeText },
+    { field: "changes_preview", header: "What changed", visible: false, body: (e: AuditEntry) => <ChangedLines e={e} />, exportValue: changeText },
     {
       field: "device", mobile: false, header: "From", body: (e: AuditEntry) => (
         <div className="min-w-0 text-xs">

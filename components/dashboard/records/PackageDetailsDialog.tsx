@@ -51,6 +51,7 @@ export function PackageDetailsDialog({ id, visible, onHide, actions }: {
           ) : "-",
         },
         { label: "Booked", value: dateTime(p.created_at) },
+        ...(p.entered_by ? [{ label: "Entered by", value: `${p.entered_by.name}, from the dashboard` }] : []),
         { label: "Pickup", value: p.pickup ?? "-" },
         { label: "Destination", value: p.destination ?? "-" },
         { label: "Status", value: <Pill value={p.status} /> },

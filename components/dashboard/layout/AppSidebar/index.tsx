@@ -2,10 +2,10 @@
 
 import { LogoMark } from "@/components/brand/Logo";
 import Link from "next/link";
-import { Suspense, useMemo } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { MdClose } from "react-icons/md";
-import SidebarItem from "./SidebarItem";
+import SidebarItem, { OpenParentContext, isActiveItem } from "./SidebarItem";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { itemOpenTo } from "@/lib/pageAccess";
@@ -26,7 +26,19 @@ function ActiveSidebarItem({ item }: { item: NavItem }) {
   return <SidebarItem item={item} depth={0} pathname={pathname} />;
 }
 
+/** On every page change, opens the parent holding that page and folds the rest (none open on a root page). */
+function FollowActiveParent({ groups, setOpenId }: { groups: NavGroup[]; setOpenId: (id: string | null) => void }) {
+  const pathname = usePathname();
+  useEffect(() => {
+    const parent = groups.flatMap((g) => g.items).find((i) => i.children?.length && isActiveItem(i, pathname));
+    setOpenId(parent?.id ?? null);
+  }, [pathname, groups, setOpenId]);
+  return null;
+}
+
 export default function AppSidebar({ groups }: AppSidebarProps) {
+  const [openId, setOpenId] = useState<string | null>(null);
+  const openParent = useMemo(() => ({ openId, setOpenId }), [openId]);
   const {
     isMobileOpen,
     isExpanded,
@@ -157,6 +169,10 @@ export default function AppSidebar({ groups }: AppSidebarProps) {
             
             The divider is for the collapsed rail, where the entries are icons
             with no labels and the heading cannot be drawn. */}
+        <OpenParentContext.Provider value={openParent}>
+        <Suspense fallback={null}>
+          <FollowActiveParent groups={visibleGroups} setOpenId={setOpenId} />
+        </Suspense>
         {visibleGroups.map((group, idx) => (
           <div key={group.id} className={idx > 0 ? "mt-4" : ""}>
             {group.label && isExpanded && (
@@ -178,6 +194,7 @@ export default function AppSidebar({ groups }: AppSidebarProps) {
             </ul>
           </div>
         ))}
+        </OpenParentContext.Provider>
       </nav>
 
       {/* User footer */}

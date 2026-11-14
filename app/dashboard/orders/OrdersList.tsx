@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "primereact/button";
 import { useQueryClient } from "@tanstack/react-query";
-import PrimeReactDataTable, { deleteSelectedAction, editAction, viewAction } from "@/components/dashboard/tables/PrimeReactDataTable";
+import PrimeReactDataTable, { createAction, deleteSelectedAction, editAction, viewAction } from "@/components/dashboard/tables/PrimeReactDataTable";
 import FiltersButton, { filterValuesFrom, type FilterGroup } from "@/components/dashboard/filters/FiltersButton";
 import { auditColumns, auditExportColumns } from "@/components/dashboard/audit";
 import { OrderDetailsDialog } from "@/components/dashboard/records/OrderDetailsDialog";
@@ -12,6 +12,7 @@ import { PeekLink } from "@/components/dashboard/records/peek";
 import { PageHeader } from "@/components/dashboard/ui";
 import RecordForm, { useOptions } from "@/components/dashboard/admin/RecordForm";
 import PaymentDialog from "@/components/dashboard/admin/PaymentDialog";
+import NewOrderDialog from "@/components/dashboard/admin/NewOrderDialog";
 import { ORDER_ITEM_KEYS, useOrderItemGroup } from "@/components/dashboard/admin/orderFilters";
 import { useAdminList } from "@/components/dashboard/admin/useAdminList";
 import { ListSearch, Pill, choices, modeLabel } from "@/components/dashboard/admin/parts";
@@ -24,7 +25,8 @@ const n = (v: unknown) => Number(v ?? 0);
 const FILTER_KEYS = ["status", "payment_status", "delivery_status", "payment_mode", "has_balance", "customer", "from", "to", ...ORDER_ITEM_KEYS];
 
 /**
- * Orders customers placed in the app: find one, follow its delivery, record what was paid.
+ * Orders customers placed in the app, and ones staff entered here (New: re-entering what the Hostinger loss took, or
+ * an order taken over the phone): find one, follow its delivery, record what was paid.
  * Every filter is a chip; a customer picked from the dashboard shows as a line you can clear.
  */
 export default function OrdersList() {
@@ -33,6 +35,7 @@ export default function OrdersList() {
   const list = useAdminList<Order>({ path: "orders", filterKeys: FILTER_KEYS });
   const [editing, setEditing] = useState<Order | null>(null);
   const [paying, setPaying] = useState<Order | null>(null);
+  const [creating, setCreating] = useState(false);
 
 
   const itemGroup = useOrderItemGroup();
@@ -80,6 +83,7 @@ export default function OrdersList() {
     { field: "delivery_status", header: "Delivery", sortable: true, body: (o: Order) => <Pill value={o.delivery_status} /> },
     { field: "address", mobile: false, header: "Address", visible: false, body: (o: Order) => o.address ?? "-" },
     { field: "order_products_count", mobile: false, header: "Items", visible: false },
+    { field: "entered_by", mobile: false, header: "Entered by", visible: false, body: (o: Order) => o.entered_by?.name ?? <span className="text-(--text-muted)">The app</span> },
     ...auditColumns<Order>({ people: false, created: false }),
   ];
 
@@ -96,6 +100,7 @@ export default function OrdersList() {
     { header: "Payment", value: (o) => o.payment_status },
     { header: "Delivery", value: (o) => o.delivery_status },
     { header: "Address", value: (o) => o.address ?? "" },
+    { header: "Entered by", value: (o) => o.entered_by?.name ?? "The app" },
     ...auditExportColumns<Order>({ people: false }),
   ];
 
@@ -103,7 +108,7 @@ export default function OrdersList() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Orders" subtitle="What customers ordered in the app. Open one to follow its delivery or record a payment." />
+      <PageHeader title="Orders" subtitle="What customers ordered in the app, and orders staff entered. Open one to follow its delivery or record a payment." />
 
       <CustomerContextBar onClear={() => list.setFilters({ customer: "" })} />
 
@@ -122,7 +127,10 @@ export default function OrdersList() {
         }
         rowActions={[viewAction<Order>((o) => list.openView(o.id)), editAction<Order>((o) => setEditing(o))]}
         selection={{ selected: list.selected, onChange: list.setSelected }}
-        toolbarActions={[deleteSelectedAction<Order>(() => list.confirmDelete("order", "Orders with payments are kept: cancel those instead. Deleting removes the order and its items for good."))]}
+        toolbarActions={[
+          deleteSelectedAction<Order>(() => list.confirmDelete("order", "Orders with payments are kept: cancel those instead. Deleting removes the order and its items for good.")),
+          createAction<Order>(() => setCreating(true)),
+        ]}
       />
 
       <OrderDetailsDialog
@@ -155,6 +163,8 @@ export default function OrdersList() {
         what="this order"
         onSaved={refreshAll}
       />
+
+      <NewOrderDialog visible={creating} onHide={() => setCreating(false)} onSaved={(o) => { refreshAll(); list.openView(o.id); }} />
 
       {paying && (
         <PaymentDialog

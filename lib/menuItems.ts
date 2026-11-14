@@ -6,7 +6,11 @@ import type { NavGroup } from "@/types/navigation";
  * (lib/pageAccess.ts). No `roles` = every staff role (Admin and Editor). The API holds the same
  * rule: role:Admin on accounts, roles and messages (pesa_back routes/admin.php).
  *
- * Few headings, related pages folded under one parent, so the whole menu fits a laptop screen.
+ * Grouped the way NICE's sidebar is (14/11/2026): a small heading over each group, related pages folded under one
+ * parent, and one parent open at a time (AppSidebar), so the menu fits a laptop screen with room to spare. It was
+ * sixteen rows with Gas & water setup, Electronics setup and Explore each a parent, and Inventory types (the top
+ * level of the whole catalogue, gas and electronics alike) sat under Gas & water. A child's label says whose it
+ * is ("Gas & water brands"), since the breadcrumb shows it alone.
  */
 export const ADMIN_ONLY = ["Admin"];
 
@@ -38,44 +42,33 @@ export const menuGroups: NavGroup[] = [
     items: [
       { id: "products", label: "Products", href: "/dashboard/products", iconName: "store" },
       {
-        id: "gas-water",
-        label: "Gas & water setup",
+        // What a product is filed under: the inventory type first (gas & water or electronics), then each side's own.
+        id: "product-setup",
+        label: "Product setup",
         iconName: "tag",
         children: [
           { id: "inventory-types", label: "Inventory types", href: "/dashboard/catalog/inventory-types" },
-          { id: "product-categories", label: "Categories", href: "/dashboard/catalog/product-categories" },
-          { id: "category-brands", label: "Brands", href: "/dashboard/catalog/category-brands" },
+          { id: "product-categories", label: "Gas & water categories", href: "/dashboard/catalog/product-categories" },
+          { id: "category-brands", label: "Gas & water brands", href: "/dashboard/catalog/category-brands" },
           { id: "product-types", label: "Product types", href: "/dashboard/catalog/product-types" },
+          { id: "electronic-categories", label: "Electronics categories", href: "/dashboard/catalog/electronic-categories" },
+          { id: "electronic-brands", label: "Electronics brands", href: "/dashboard/catalog/electronic-brands" },
+          { id: "electronic-types", label: "Electronics series", href: "/dashboard/catalog/electronic-types" },
         ],
       },
       {
-        id: "electronics",
-        label: "Electronics setup",
-        iconName: "inventory",
+        // What the app shows besides the products.
+        id: "app-content",
+        label: "In the app",
+        iconName: "campaign",
         children: [
-          { id: "electronic-categories", label: "Categories", href: "/dashboard/catalog/electronic-categories" },
-          { id: "electronic-brands", label: "Brands", href: "/dashboard/catalog/electronic-brands" },
-          { id: "electronic-types", label: "Series", href: "/dashboard/catalog/electronic-types" },
+          { id: "ads", label: "Adverts", href: "/dashboard/catalog/ads" },
+          { id: "explore-categories", label: "Explore categories", href: "/dashboard/catalog/explore-categories" },
+          { id: "explore-category-blogs", label: "Explore articles", href: "/dashboard/catalog/explore-category-blogs" },
+          { id: "faqs", label: "FAQs", href: "/dashboard/catalog/faqs" },
+          { id: "referrals", label: "Referrals", href: "/dashboard/catalog/referrals" },
         ],
       },
-    ],
-  },
-  {
-    id: "app",
-    label: "In the app",
-    items: [
-      { id: "ads", label: "Adverts", href: "/dashboard/catalog/ads", iconName: "campaign" },
-      {
-        id: "explore",
-        label: "Explore",
-        iconName: "document",
-        children: [
-          { id: "explore-categories", label: "Categories", href: "/dashboard/catalog/explore-categories" },
-          { id: "explore-category-blogs", label: "Articles", href: "/dashboard/catalog/explore-category-blogs" },
-        ],
-      },
-      { id: "faqs", label: "FAQs", href: "/dashboard/catalog/faqs", iconName: "help" },
-      { id: "referrals", label: "Referrals", href: "/dashboard/catalog/referrals", iconName: "groups" },
     ],
   },
   {
@@ -84,12 +77,17 @@ export const menuGroups: NavGroup[] = [
     items: [
       { id: "users", label: "Customers & staff", href: "/dashboard/users", iconName: "people", roles: ADMIN_ONLY },
       { id: "messages", label: "Messages to customers", href: "/dashboard/messages", iconName: "bell", roles: ADMIN_ONLY },
-      { id: "roles", label: "Roles & access", href: "/dashboard/roles", iconName: "shield", roles: ADMIN_ONLY },
-      { id: "audit-trail", label: "Audit trail", href: "/dashboard/audit-trail", iconName: "history", roles: ADMIN_ONLY },
+      {
+        id: "settings",
+        label: "Settings",
+        iconName: "shield",
+        roles: ADMIN_ONLY,
+        children: [
+          { id: "roles", label: "Roles & access", href: "/dashboard/roles" },
+          { id: "audit-trail", label: "Audit trail", href: "/dashboard/audit-trail" },
+        ],
+      },
+      { id: "user-manual", label: "User manual", href: "/dashboard/user-manual", iconName: "help" },
     ],
-  },
-  {
-    id: "reference",
-    items: [{ id: "user-manual", label: "User manual", href: "/dashboard/user-manual", iconName: "help" }],
   },
 ];

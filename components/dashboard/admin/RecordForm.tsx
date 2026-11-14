@@ -17,6 +17,8 @@ import { usePrimeReactToast } from "@/contexts/PrimeReactToastContext";
 import { adminApi, photoUrl, toFormData } from "@/services/admin";
 import type { Options } from "@/services/types/pesa";
 import { calendarDate, calendarDay } from "@/lib/format";
+import InfiniteSelect, { type Option } from "@/components/dashboard/forms/InfiniteSelect";
+import { PlacedAtField, customerPicker } from "./pickers";
 
 /** The dropdown choices every form and filter reads: one call, cached for five minutes. */
 export function useOptions() {
@@ -26,7 +28,11 @@ export function useOptions() {
 export type FieldDef = {
   name: string;
   label: string;
-  type: "text" | "textarea" | "number" | "money" | "status" | "select" | "date" | "password" | "email";
+  /**
+   * "customer": one customer from GET /admin/customers (sent as its id). "moment": when something happened, a date
+   * and time on the Kampala clock, never in the future, sent as an instant (empty = now).
+   */
+  type: "text" | "textarea" | "number" | "money" | "status" | "select" | "date" | "password" | "email" | "customer" | "moment";
   required?: boolean;
   hint?: string;
   /** For "select": the list in GET /admin/options. */
@@ -86,6 +92,7 @@ export default function RecordForm<T extends { id: number }>({
   const initial = useMemo(() => {
     const v: Record<string, unknown> = {};
     fields.forEach((f) => {
+      if (f.type === "customer" || f.type === "moment") { v[f.name] = null; return; }
       const raw = f.type === "password" ? "" : record?.[f.name] ?? defaults?.[f.name] ?? (f.type === "status" ? (f.values ?? ["active"])[0] : null);
       v[f.name] = f.type === "number" || f.type === "money" || f.type === "select" ? (raw === null || raw === "" || raw === undefined ? null : Number(raw)) : raw ?? "";
     });
@@ -104,7 +111,9 @@ export default function RecordForm<T extends { id: number }>({
       fields.forEach((f) => {
         if (f.when && !f.when(v)) { body[f.name] = null; return; }
         const value = v[f.name];
-        body[f.name] = f.type === "date" && value instanceof Date ? calendarDay(value) : value;
+        body[f.name] = f.type === "date" && value instanceof Date ? calendarDay(value)
+          : f.type === "customer" ? ((value as Option | null)?.value ?? null)
+          : value;
       });
       const p = v.photo as UploadedPhoto | null;
       const removed = !!record?.photo_url && !p;
@@ -165,6 +174,11 @@ export default function RecordForm<T extends { id: number }>({
                 );
               case "password":
                 return <InputText id={f.name} type="password" autoComplete="new-password" value={String(field.value ?? "")} onChange={(e) => field.onChange(e.target.value)} className="w-full" />;
+              case "customer":
+                return <InfiniteSelect {...customerPicker} value={field.value as Option | null} onChange={field.onChange} invalid={!!err}
+                  placeholder="Choose the customer" searchPlaceholder="Name, phone or email" />;
+              case "moment":
+                return <PlacedAtField id={f.name} label={f.label} value={(field.value as string | null) ?? null} onChange={field.onChange} />;
               case "email":
                 return <InputText id={f.name} type="email" value={String(field.value ?? "")} onChange={(e) => field.onChange(e.target.value)} className="w-full" />;
               default:

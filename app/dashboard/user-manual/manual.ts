@@ -82,7 +82,7 @@ export const MANUAL: ManualChapter[] = [
         topics: [
           {
             title: "The menu and the bell",
-            body: "The menu on the left holds every page your role can open. The bell at the top right counts new alerts: new orders, package bookings, sign-ups, and messages you sent once they finish. Click one to open it.",
+            body: "The menu on the left holds every page your role can open, under a few headings: Sales, Catalogue, Administration. Related pages fold under one entry (Payments, Product setup, In the app, Settings), and one opens at a time, so the menu stays short. The bell at the top right counts new alerts: new orders, package bookings, sign-ups, and messages you sent once they finish. Click one to open it.",
           },
           {
             title: "Related records open where you are",
@@ -129,11 +129,21 @@ export const MANUAL: ManualChapter[] = [
       {
         id: "orders",
         title: "Orders",
-        summary: "What customers ordered in the app: follow up delivery and record payments.",
+        summary: "What customers ordered in the app, and orders you enter: follow up delivery and record payments.",
         iconName: "cart",
         route: "/dashboard/orders",
-        keywords: ["order", "bnpl", "buy now pay later", "cod", "delivery", "balance", "payment"],
+        keywords: ["order", "bnpl", "buy now pay later", "cod", "delivery", "balance", "payment", "new order", "enter", "re-enter", "lost", "phone order"],
         topics: [
+          {
+            title: "Enter an order",
+            body: "Press New to enter an order the customer did not place in the app: one lost when the old hosting lost its data, or one taken over the phone. Choose the customer, when it was placed (leave it empty for now), the address, and each item with its quantity and price (the product's price today; change it if they paid another price then). Set the payment mode, status and delivery, then Enter order. Its details open next, so you can record what was paid.",
+            notes: [
+              "The items come out of stock, as for an app order. Untick Take these items out of stock if the stock count already allows for it.",
+              "Nobody is messaged: not the customer, not the admins.",
+              "The order shows who entered it (Entered by, in its details and as a column you can switch on), and the audit trail records it.",
+              "The app's rule holds: a customer who still owes on a buy-now-pay-later order cannot get another one until it is paid.",
+            ],
+          },
           {
             title: "Find an order",
             body: "Search by order number, customer name, phone or address. Filters narrow by status, payment, delivery, payment mode, balance and dates; each filter shows as a chip you can clear.",
@@ -145,7 +155,11 @@ export const MANUAL: ManualChapter[] = [
           {
             title: "Record a payment",
             body: "Open the order and press Record payment. Enter the amount, how it was paid and the transaction number. The balance updates at once, and the customer gets a message.",
-            notes: ["You cannot record more than the balance due.", "When the balance reaches zero the order becomes Completed."],
+            notes: [
+              "You cannot record more than the balance due.",
+              "When the balance reaches zero the order becomes Completed.",
+              "Paid on: leave it empty for money received now. For a payment made earlier (re-entering a lost one), put the day and time it was paid: it is dated then, and the customer gets no message.",
+            ],
           },
           {
             title: "Delete orders",
@@ -156,11 +170,15 @@ export const MANUAL: ManualChapter[] = [
       {
         id: "packages",
         title: "Packages",
-        summary: "Deliveries customers book: set the price, follow delivery, record payments.",
+        summary: "Deliveries customers book, and ones you enter: set the price, follow delivery, record payments.",
         iconName: "package",
         route: "/dashboard/packages",
-        keywords: ["delivery", "pickup", "destination", "parcel"],
+        keywords: ["delivery", "pickup", "destination", "parcel", "new package", "enter", "re-enter", "lost"],
         topics: [
+          {
+            title: "Enter a package",
+            body: "Press New to enter a delivery the customer did not book in the app: choose the customer, when it was booked (empty = now), what it is, pickup, destination and the price. Nothing is paid yet and nobody is messaged; its details open next to record payments, each on the day it was paid.",
+          },
           {
             title: "Price and follow a package",
             body: "Open a package and press Edit to set what it costs (Charged), its status and its delivery. The balance follows the price. Record payments from the package the same way as for an order.",
@@ -210,7 +228,7 @@ export const MANUAL: ManualChapter[] = [
       {
         id: "setup",
         title: "Categories, brands and types",
-        summary: "The lists products are sorted by, for gas & water and for electronics.",
+        summary: "The lists products are sorted by (Product setup in the menu): inventory types, then gas & water and electronics.",
         iconName: "tag",
         route: "/dashboard/catalog/product-categories",
         keywords: ["category", "brand", "type", "series", "model", "inventory type", "electronics"],

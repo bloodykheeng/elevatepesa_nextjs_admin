@@ -31,11 +31,13 @@ export const adminApi = {
 
   orders: (params: Params) => listOf<Order>("orders", params),
   order: (id: number) => one<Order>("orders", id),
+  createOrder: (body: object) => create<Order>("orders", body),
   updateOrder: (id: number, body: object) => update<Order>("orders", id, body),
   recordOrderPayment: (id: number, body: object) => post<Saved<Order>>(`/admin/orders/${id}/payments`, body),
 
   packages: (params: Params) => listOf<Package>("packages", params),
   package: (id: number) => one<Package>("packages", id),
+  createPackage: (body: FormData | object) => create<Package>("packages", body),
   updatePackage: (id: number, body: FormData | object) => update<Package>("packages", id, body),
   recordPackagePayment: (id: number, body: object) => post<Saved<Package>>(`/admin/packages/${id}/payments`, body),
 

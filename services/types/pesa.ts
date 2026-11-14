@@ -109,6 +109,8 @@ export interface Order extends Audited {
   order_products_count?: number;
   order_products?: OrderLine[];
   payments?: Payment[];
+  /** The staff member who entered it from the dashboard; null when the customer placed it in the app. */
+  entered_by?: Named | null;
 }
 
 export interface Package extends Audited {
@@ -128,6 +130,8 @@ export interface Package extends Audited {
   delivery_status: string | null;
   payment_mode: string | null;
   payments?: Payment[];
+  /** The staff member who entered it from the dashboard; null when the customer booked it in the app. */
+  entered_by?: Named | null;
 }
 
 export interface Named {

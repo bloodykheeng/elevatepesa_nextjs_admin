@@ -1,13 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { MdExpandMore, MdExpandLess } from "react-icons/md";
 import { renderIcon } from "@/lib/iconRegistry";
 import { useSidebar } from "@/contexts/SidebarContext";
 import type { NavItem } from "@/types/navigation";
 
-function isActiveItem(item: NavItem, pathname: string): boolean {
+/**
+ * One root parent open at a time (NICE's sidebar): opening one folds the others, and moving to a page opens its own
+ * parent and folds the rest, so the menu never grows as you go. AppSidebar holds the value.
+ */
+export const OpenParentContext = createContext<{ openId: string | null; setOpenId: (id: string | null) => void } | null>(null);
+
+export function isActiveItem(item: NavItem, pathname: string): boolean {
   if (item.href) {
     // Prefix matching is what keeps a parent lit on its own sub-pages, but it
     // also lit `/dashboard` on every single dashboard route, since every one of
@@ -32,11 +38,15 @@ export default function SidebarItem({ item, depth, pathname }: SidebarItemProps)
 
   const active = isActiveItem(item, pathname);
   const hasChildren = !!item.children?.length;
-  const [expanded, setExpanded] = useState(active && hasChildren);
-
+  // A root parent follows the shared value; a deeper one (none today) keeps its own.
+  const shared = useContext(OpenParentContext);
+  const [ownExpanded, setOwnExpanded] = useState(active && hasChildren);
   useEffect(() => {
-    if (active && hasChildren) setExpanded(true);
+    if (active && hasChildren) setOwnExpanded(true);
   }, [pathname, active, hasChildren]);
+  const useShared = isRoot && !!shared;
+  const expanded = useShared ? shared!.openId === item.id : ownExpanded;
+  const toggle = () => (useShared ? shared!.setOpenId(expanded ? null : item.id) : setOwnExpanded((v) => !v));
 
   const itemCls = [
     "group relative flex w-full items-center rounded-lg py-2 text-left text-sm font-medium transition-colors duration-150",
@@ -112,7 +122,7 @@ export default function SidebarItem({ item, depth, pathname }: SidebarItemProps)
   if (hasChildren) {
     return (
       <div>
-        <button className={itemCls} onClick={() => setExpanded((v) => !v)}>
+        <button className={itemCls} onClick={toggle} aria-expanded={expanded}>
           {inner}
         </button>
         {!isCollapsed && expanded && (
