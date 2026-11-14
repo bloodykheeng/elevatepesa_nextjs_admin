@@ -132,7 +132,7 @@ export const MANUAL: ManualChapter[] = [
         summary: "What customers ordered in the app, and orders you enter: follow up delivery and record payments.",
         iconName: "cart",
         route: "/dashboard/orders",
-        keywords: ["order", "bnpl", "buy now pay later", "cod", "delivery", "balance", "payment", "new order", "enter", "re-enter", "lost", "phone order"],
+        keywords: ["order", "bnpl", "buy now pay later", "cod", "delivery", "balance", "payment", "new order", "enter", "re-enter", "lost", "phone order", "order number", "ORD"],
         topics: [
           {
             title: "Enter an order",
@@ -146,7 +146,7 @@ export const MANUAL: ManualChapter[] = [
           },
           {
             title: "Find an order",
-            body: "Search by order number, customer name, phone or address. Filters narrow by status, payment, delivery, payment mode, balance and dates; each filter shows as a chip you can clear.",
+            body: "Search by order number, customer name, phone or address. Orders from 14 Nov 2026 are numbered ORD, the month and year, then a count (ORD1120265: the 5th order of November 2026); older ones keep their earlier numbers. A number is never given to another order, even after a delete. Filters narrow by status, payment, delivery, payment mode, balance and dates; each filter shows as a chip you can clear.",
           },
           {
             title: "Edit an order",
@@ -201,7 +201,7 @@ export const MANUAL: ManualChapter[] = [
         topics: [
           {
             title: "Order and package payments",
-            body: "Two lists under Payments: order payments and package payments. Filter by method and dates, and export them. The eye opens the payment: amount, method, transaction number, who recorded it, and the order (or package) it paid, which opens over it. To add a payment, open its order or package and press Record payment.",
+            body: "Two lists under Payments: order payments and package payments. Filter by method and dates, and export them. Each has a receipt number of ours (PAY... for orders, PPAY... for packages) beside the customer's transaction number, and both can be searched. The eye opens the payment: receipt, amount, method, transaction number, who recorded it, and the order (or package) it paid, which opens over it. To add a payment, open its order or package and press Record payment.",
           },
         ],
       },

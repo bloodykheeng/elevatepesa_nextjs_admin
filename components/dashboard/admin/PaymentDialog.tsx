@@ -73,7 +73,7 @@ export default function PaymentDialog({
 
   return (
     <Dialog
-      header={payment ? `Correct a payment for ${reference}` : `Record a payment for ${reference}`}
+      header={payment ? `Correct payment${payment.receipt_number ? ` ${payment.receipt_number}` : ""} for ${reference}` : `Record a payment for ${reference}`}
       visible={visible}
       onHide={close}
       style={{ width: "min(30rem, 95vw)" }}

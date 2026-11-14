@@ -68,8 +68,12 @@ export function PaymentsSection({ payments, kind, balance = 0, actions }: {
                 <span className="min-w-0">
                   <span className="font-bold text-(--text-primary)">{ugx(n(p.amount))}</span>
                   <span className="text-(--text-secondary)"> · {methodLabel(p.payment_method)}</span>
-                  {p.transaction_number && (
-                    <span className="block text-xs text-(--text-muted)">Transaction no. <span className="font-mono">{p.transaction_number}</span></span>
+                  {(p.receipt_number || p.transaction_number) && (
+                    <span className="block text-xs text-(--text-muted)">
+                      {p.receipt_number && <>Receipt <span className="font-mono">{p.receipt_number}</span></>}
+                      {p.receipt_number && p.transaction_number && " · "}
+                      {p.transaction_number && <>Transaction no. <span className="font-mono">{p.transaction_number}</span></>}
+                    </span>
                   )}
                 </span>
                 <span className="text-xs text-(--text-muted)">

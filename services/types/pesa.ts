@@ -73,6 +73,8 @@ export interface AuditEntryDetail extends AuditEntry {
 
 export interface Payment extends Audited {
   id: number;
+  /** Our receipt number (PAY/PPAY + MMYYYY + counter); null only before the 14/11/2026 migration ran. */
+  receipt_number?: string | null;
   order_id?: number;
   package_id?: number;
   user_id: number;

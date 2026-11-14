@@ -30,9 +30,9 @@ test("an order is entered, paid in part, corrected, edited and removed", async (
   await form.locator("#stock").click();
   await form.getByRole("button", { name: "Enter order" }).click();
   await page.getByRole("button", { name: "Yes, save" }).click();
-  const toast = page.getByText(/Order #[A-Z0-9]{10} entered for/);
+  const toast = page.getByText(/Order #ORD\d+ entered for/);
   await expect(toast).toBeVisible();
-  const number = ((await toast.textContent()) ?? "").match(/#([A-Z0-9]{10})/)![1];
+  const number = ((await toast.textContent()) ?? "").match(/#(ORD\d+)/)![1];
 
   // Its details open next: pay part of it, an instalment.
   const details = page.getByRole("dialog", { name: `Order #${number}` });

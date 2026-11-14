@@ -34,6 +34,7 @@ export default function PaymentsList({ kind }: { kind: "payments" | "package-pay
   const ref = (p: Payment) => (forOrders ? (p.order ? `#${p.order.order_number}` : "-") : (p.package?.name ?? "-"));
 
   const columns = [
+    { field: "receipt_number", header: "Receipt", sortable: true, body: (p: Payment) => <span className="whitespace-nowrap font-mono text-xs font-semibold text-(--text-primary)">{p.receipt_number ?? "-"}</span> },
     { field: "created_at", header: "Received", sortable: true, body: (p: Payment) => <span className="whitespace-nowrap text-sm">{dateTime(p.created_at)}</span> },
     { field: "amount", header: "Amount", sortable: true, body: (p: Payment) => <b className="whitespace-nowrap">{ugx(Number(p.amount))}</b> },
     { field: "payment_method", header: "Method", sortable: true, body: (p: Payment) => methodLabel(p.payment_method), exportValue: (p: Payment) => methodLabel(p.payment_method) },
@@ -47,6 +48,7 @@ export default function PaymentsList({ kind }: { kind: "payments" | "package-pay
   ];
 
   const exportColumns: ExportColumn<Payment>[] = [
+    { header: "Receipt", value: (p) => p.receipt_number ?? "" },
     { header: "Received", value: (p) => asDate(p.created_at) },
     { header: "Amount (UGX)", value: (p) => Number(p.amount) },
     { header: "Method", value: (p) => methodLabel(p.payment_method) },
@@ -75,7 +77,7 @@ export default function PaymentsList({ kind }: { kind: "payments" | "package-pay
         exportAll={{ fetchPage: list.fetchPage, columns: exportColumns }}
         headerContent={
           <div className="flex flex-wrap items-center gap-2">
-            <ListSearch value={list.search} onSearch={(v) => list.setFilters({ search: v })} placeholder={forOrders ? "Transaction, order, customer" : "Transaction, package, customer"} />
+            <ListSearch value={list.search} onSearch={(v) => list.setFilters({ search: v })} placeholder={forOrders ? "Receipt, transaction, order, customer" : "Receipt, transaction, package, customer"} />
             <FiltersButton groups={filterGroups} values={filterValuesFrom(filterGroups, list.getParam)} onApply={list.setFilters} />
           </div>
         }

@@ -60,6 +60,7 @@ export function PaymentDetailsDialog({ kind, id, visible, onHide, actions }: {
         </div>
       )}
       fields={p ? [
+        { label: "Receipt", value: p.receipt_number ? <span className="font-mono font-semibold">{p.receipt_number}</span> : "-" },
         { label: "Amount", value: <b>{ugx(n(p.amount))}</b> },
         { label: "Method", value: methodLabel(p.payment_method) },
         { label: "Transaction no.", value: p.transaction_number ? <span className="font-mono">{p.transaction_number}</span> : "-" },
