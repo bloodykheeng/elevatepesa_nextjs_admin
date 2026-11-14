@@ -43,9 +43,15 @@ export function UserReferenceCell({ user }: { user?: UserReference | null }) {
  * The four audit columns, hidden by default. A record written by no signed-in person
  * (a system job) has no `created_by`: pass `people: false`.
  */
-export function auditColumns<T extends Audited>({ people = true, updated = true }: { people?: boolean; updated?: boolean } = {}) {
+export function auditColumns<T extends Audited>({ people = true, updated = true, created = true }: {
+  people?: boolean;
+  updated?: boolean;
+  /** False when the list already shows `created_at` under its own name ("Placed", "Booked"): two columns on one
+   * field crash the table (React's duplicate key, the user, 14 Nov 2026). */
+  created?: boolean;
+} = {}) {
   return [
-    {
+    ...(created ? [{
       field: "created_at", mobile: false,
       header: "Created",
       type: "date",
@@ -53,7 +59,7 @@ export function auditColumns<T extends Audited>({ people = true, updated = true 
       visible: false,
       body: (row: T) => <span className="text-sm text-(--text-muted)">{dateTime(row.created_at)}</span>,
       exportValue: (row: T) => row.created_at ?? "",
-    },
+    }] : []),
     ...(updated
       ? [
           {
@@ -91,7 +97,8 @@ export function auditColumns<T extends Audited>({ people = true, updated = true 
   ];
 }
 
-const person = (user?: UserReference | null) => (user ? `${user.name}${user.email ? ` · ${user.email}` : ""}` : "N/A");
+// A record whose relation was not loaded carries the bare id (a number): that is no person to show.
+const person = (user?: UserReference | null) => (user && typeof user === "object" && user.name ? `${user.name}${user.email ? ` · ${user.email}` : ""}` : "N/A");
 
 /** The audit block at the foot of a details dialog: who first (created by, updated by), the dates under. */
 export function AuditDetails({ record, people = true }: { record: Audited; people?: boolean }) {
@@ -144,6 +151,8 @@ export function RecordDetailsDialog({
   error,
   after,
   history,
+  photo,
+  top,
 }: {
   header: React.ReactNode;
   visible: boolean;
@@ -168,6 +177,11 @@ export function RecordDetailsDialog({
   after?: React.ReactNode;
   /** The record in the audit trail (Admin only): its model name ("Order") and id. */
   history?: { type: string; id: number | string };
+  /** The record's picture, beside the fields from a tablet up (above them on a phone), never alone on a row with
+   * the right half empty (the user, 14 Nov 2026). */
+  photo?: React.ReactNode;
+  /** A summary band above the fields (a customer's contact and totals). */
+  top?: React.ReactNode;
 }) {
   const { role } = useAuth();
   return (
@@ -203,15 +217,19 @@ export function RecordDetailsDialog({
           {links && (
             <div onClickCapture={(e) => (e.target as HTMLElement).closest("a") && onHide()}>{links}</div>
           )}
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm sm:gap-x-6">
-            {fields.map((f, i) => (
-              // Index too: two fields may share a label, and a repeated key drops one of them.
-              <div key={`${i}-${f.label}`} className={`min-w-0 ${f.wide ? "col-span-2" : ""}`}>
-                <dt className="mb-0.5 text-xs text-(--text-muted)">{f.label}</dt>
-                <dd className="wrap-break-word text-(--text-primary)">{f.value ?? "N/A"}</dd>
-              </div>
-            ))}
-          </dl>
+          {top}
+          <div className={photo ? "flex flex-col gap-5 sm:flex-row sm:items-start" : ""}>
+            {photo && <div className="shrink-0 self-center sm:self-start">{photo}</div>}
+            <dl className="grid min-w-0 flex-1 grid-cols-2 gap-x-4 gap-y-3 text-sm sm:gap-x-6">
+              {fields.map((f, i) => (
+                // Index too: two fields may share a label, and a repeated key drops one of them.
+                <div key={`${i}-${f.label}`} className={`min-w-0 ${f.wide ? "col-span-2" : ""}`}>
+                  <dt className="mb-0.5 text-xs text-(--text-muted)">{f.label}</dt>
+                  <dd className="wrap-break-word text-(--text-primary)">{f.value ?? "N/A"}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
           {children}
           <AuditDetails record={record} people={people} />
           {history && role === "Admin" && (

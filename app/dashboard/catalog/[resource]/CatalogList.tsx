@@ -129,7 +129,7 @@ export default function CatalogList({ resource }: { resource: string }) {
         loading={viewing.isPending}
         error={viewError(viewing, def.singular)}
         fields={shown ? def.view(shown) : []}
-        links={shown && def.photo && shown.photo_url ? <Thumb src={shown.photo_url} name={nameOf(shown)} size="h-40 w-40" /> : undefined}
+        photo={shown && def.photo && shown.photo_url ? <Thumb src={shown.photo_url} name={nameOf(shown)} size="h-32 w-32" /> : undefined}
         footer={
           <div className="flex justify-end gap-2">
             <Button label="Close" text onClick={list.closeView} />

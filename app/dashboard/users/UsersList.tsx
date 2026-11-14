@@ -3,21 +3,20 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Button } from "primereact/button";
-import { useQuery } from "@tanstack/react-query";
 import { FiSend } from "react-icons/fi";
 import PrimeReactDataTable, { createAction, deleteSelectedAction, editAction, viewAction } from "@/components/dashboard/tables/PrimeReactDataTable";
 import FiltersButton, { filterValuesFrom, type FilterGroup } from "@/components/dashboard/filters/FiltersButton";
-import { RecordDetailsDialog } from "@/components/dashboard/audit";
+import { CustomerDetailsDialog } from "@/components/dashboard/records/CustomerDetailsDialog";
 import { PageHeader } from "@/components/dashboard/ui";
 import RecordForm, { useOptions, type Section } from "@/components/dashboard/admin/RecordForm";
 import SendMessageDialog from "@/components/dashboard/admin/SendMessageDialog";
 import { useAdminList } from "@/components/dashboard/admin/useAdminList";
-import { ListSearch, Pill, Thumb, choices, VIEW_META, viewError } from "@/components/dashboard/admin/parts";
+import { ListSearch, Pill, Thumb, choices } from "@/components/dashboard/admin/parts";
 import { useAuth } from "@/contexts/AuthContext";
-import { adminApi, create, update } from "@/services/admin";
+import { create, update } from "@/services/admin";
 import type { Account } from "@/services/types/pesa";
 import { asDate, type ExportColumn } from "@/lib/exportRows";
-import { dateTime, longDate, shortDate, ugx } from "@/lib/format";
+import { dateTime, shortDate } from "@/lib/format";
 
 type Row = Account & Record<string, unknown>;
 
@@ -32,8 +31,6 @@ export default function UsersList() {
   const [editing, setEditing] = useState<{ row: Row | null } | null>(null);
   const [messaging, setMessaging] = useState<{ id: number; name: string }[] | null>(null);
 
-  const viewing = useQuery({ queryKey: ["users", "one", list.viewId], queryFn: () => adminApi.user(Number(list.viewId)), enabled: !!list.viewId, meta: VIEW_META });
-  const shown = viewing.data ?? null;
 
   const filterGroups: FilterGroup[] = [
     { title: "Account", fields: [
@@ -154,58 +151,17 @@ export default function UsersList() {
         what="this account"
       />
 
-      <RecordDetailsDialog
-        history={shown ? { type: "User", id: shown.id } : undefined}
-        header={shown?.name ?? "Account"}
+      <CustomerDetailsDialog
+        id={list.viewId}
         visible={!!list.viewId}
         onHide={list.closeView}
-        record={shown}
-        people={false}
-        width="min(44rem, 95vw)"
-        loading={viewing.isPending}
-        error={viewError(viewing, "account")}
-        links={shown ? <div className="flex items-center gap-3"><Thumb src={shown.photo_url} name={shown.name} size="h-16 w-16" round /><Pill value={shown.status} /></div> : undefined}
-        fields={shown ? [
-          { label: "Email", value: shown.email },
-          { label: "Phone", value: shown.phone ?? "-" },
-          { label: "Role", value: shown.role ?? "-" },
-          { label: "App on a phone", value: shown.has_device ? "Yes: can get push" : "No" },
-          { label: "Gender", value: shown.gender ?? "-" },
-          { label: "Date of birth", value: shown.date_of_birth ? longDate(shown.date_of_birth) : "-" },
-          { label: "NIN", value: shown.nin ?? "-" },
-          { label: "Last sign-in", value: shown.lastlogin ? dateTime(shown.lastlogin) : "Never" },
-          ...(shown.totals ? [
-            { label: "Ordered (not cancelled)", value: ugx(shown.totals.orders_value) },
-            { label: "Still owes", value: <b className={shown.totals.balance_due > 0 ? "text-red-600 dark:text-red-400" : ""}>{ugx(shown.totals.balance_due)}</b> },
-          ] : []),
-        ] : []}
-        footer={
-          <div className="flex flex-wrap justify-end gap-2">
-            <Button label="Close" text onClick={list.closeView} />
-            {shown && isCustomer(shown) && <Button label="Message" icon="pi pi-send" outlined onClick={() => setMessaging([{ id: shown.id, name: shown.name }])} />}
-            {shown && <Button label="Edit" icon="pi pi-pencil" outlined onClick={() => { setEditing({ row: shown as Row }); list.closeView(); }} />}
-          </div>
-        }
-      >
-        {shown && (shown.orders?.length ?? 0) > 0 && (
-          <section>
-            <div className="mb-2 flex items-center justify-between">
-              <h3 className="m-0 text-sm font-semibold text-(--text-primary)">Latest orders ({shown.orders_count})</h3>
-              <Link href={`/dashboard/orders?customer=${shown.id}`} className="text-xs font-semibold text-(--brand-ink) hover:underline">See all</Link>
-            </div>
-            <ul className="divide-y divide-(--border-color) rounded-xl border border-(--border-color)">
-              {shown.orders!.map((o) => (
-                <li key={o.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
-                  <Link href={`/dashboard/orders?view=${o.id}`} className="font-mono text-(--brand-ink) hover:underline">#{o.order_number}</Link>
-                  <span className="text-xs text-(--text-muted)">{shortDate(o.created_at)}</span>
-                  <span>{ugx(Number(o.charged_amount))}</span>
-                  <Pill value={o.status} />
-                </li>
-              ))}
-            </ul>
-          </section>
+        actions={(u) => (
+          <>
+            {isCustomer(u) && <Button label="Message" icon="pi pi-send" outlined onClick={() => setMessaging([{ id: u.id, name: u.name }])} />}
+            <Button label="Edit" icon="pi pi-pencil" outlined onClick={() => { setEditing({ row: u as Row }); list.closeView(); }} />
+          </>
         )}
-      </RecordDetailsDialog>
+      />
 
       <SendMessageDialog visible={!!messaging} onHide={() => setMessaging(null)} recipients={messaging} onSent={() => list.setSelected([])} />
     </div>

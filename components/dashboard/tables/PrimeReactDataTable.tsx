@@ -280,7 +280,16 @@ const PrimeReactDataTable = <T extends DataItem>({
 }: PrimeReactDataTableProps<T>) => {
   // Which rows are open, by id (PrimeReact's expandedRows map).
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const memorisedColumns = useMemo(() => columns, [columns]);
+  // One column per field: a repeated field is a repeated React key, which drops or doubles cells when columns are
+  // toggled. Kept first, the repeat dropped, and said in development so it gets fixed where it is declared.
+  const memorisedColumns = useMemo(() => {
+    const seen = new Set<string>();
+    return columns.filter((col) => {
+      if (!seen.has(col.field)) return seen.add(col.field), true;
+      if (process.env.NODE_ENV !== "production") console.warn(`PrimeReactDataTable: two columns on "${col.field}"; the second is dropped.`);
+      return false;
+    });
+  }, [columns]);
   // One class per table, so a locked-row tooltip only targets its own rows.
   const lockedClass = `gn-locked-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
 
@@ -316,7 +325,7 @@ const PrimeReactDataTable = <T extends DataItem>({
       [col.field]: !isVisible(col),
     }));
 
-  const allColumnsSelected = columns.length > 0 && columns.every(isVisible);
+  const allColumnsSelected = memorisedColumns.length > 0 && memorisedColumns.every(isVisible);
 
   const resetToDefault = () => setVisibilityOverrides({});
 
@@ -371,7 +380,7 @@ const PrimeReactDataTable = <T extends DataItem>({
       ),
     };
 
-    const items: MenuItem[] = columns.map((col) => ({
+    const items: MenuItem[] = memorisedColumns.map((col) => ({
       template: () => (
         <div
           className="flex w-full cursor-pointer items-center gap-2 rounded px-3 py-2 hover:bg-(--bg-page)"
@@ -418,7 +427,7 @@ const PrimeReactDataTable = <T extends DataItem>({
    * unpaginated.
    */
   const exportToExcel = () => {
-    const visible = columns.filter(isVisible);
+    const visible = memorisedColumns.filter(isVisible);
 
     const exportData = data.map((item) => {
       const row: Record<string, string> = {};
@@ -458,7 +467,7 @@ const PrimeReactDataTable = <T extends DataItem>({
 
   // The visible columns as typed export cells, for the all-pages export.
   const tableExportColumns = (): ExportColumn<T>[] =>
-    columns.filter(isVisible).map((col) => ({
+    memorisedColumns.filter(isVisible).map((col) => ({
       header: col.header,
       value: (row: T) => {
         if (col.exportValue) return col.exportValue(row) ?? "";
@@ -530,6 +539,7 @@ const PrimeReactDataTable = <T extends DataItem>({
           severity="secondary"
           outlined
           tooltip="Column visibility"
+          aria-label="Column visibility"
           tooltipOptions={{ position: "top" }}
           onClick={(e) => columnMenuRef.current?.toggle(e)}
         />
@@ -579,7 +589,7 @@ const PrimeReactDataTable = <T extends DataItem>({
   // list carries an empty column headed "Actions".
   const showActionsColumn = rowActions.length > 0 && columns.length > 0;
 
-  const visibleDataCols = columns.filter(isVisible).length;
+  const visibleDataCols = memorisedColumns.filter(isVisible).length;
   const skeletonColCount =
     visibleDataCols + (selection ? 1 : 0) + (showActionsColumn ? 1 : 0);
 

@@ -2,15 +2,18 @@
 
 import { useState } from "react";
 import { Button } from "primereact/button";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import PrimeReactDataTable, { deleteSelectedAction, editAction, viewAction } from "@/components/dashboard/tables/PrimeReactDataTable";
 import FiltersButton, { filterValuesFrom, type FilterGroup } from "@/components/dashboard/filters/FiltersButton";
-import { RecordDetailsDialog, auditColumns, auditExportColumns } from "@/components/dashboard/audit";
+import { auditColumns, auditExportColumns } from "@/components/dashboard/audit";
+import { PackageDetailsDialog } from "@/components/dashboard/records/PackageDetailsDialog";
+import { CustomerContextBar } from "@/components/dashboard/records/shared";
+import { PeekLink } from "@/components/dashboard/records/peek";
 import { PageHeader } from "@/components/dashboard/ui";
 import RecordForm, { useOptions } from "@/components/dashboard/admin/RecordForm";
 import PaymentDialog from "@/components/dashboard/admin/PaymentDialog";
 import { useAdminList } from "@/components/dashboard/admin/useAdminList";
-import { ListSearch, Pill, Thumb, choices, methodLabel, VIEW_META, viewError } from "@/components/dashboard/admin/parts";
+import { ListSearch, Pill, Thumb, choices } from "@/components/dashboard/admin/parts";
 import { adminApi } from "@/services/admin";
 import type { Package } from "@/services/types/pesa";
 import { asDate, type ExportColumn } from "@/lib/exportRows";
@@ -26,12 +29,10 @@ type Row = Package & Record<string, unknown>;
 export default function PackagesList() {
   const options = useOptions();
   const queryClient = useQueryClient();
-  const list = useAdminList<Package>({ path: "packages", filterKeys: ["status", "payment_status", "delivery_status", "customer", "from", "to"] });
+  const list = useAdminList<Package>({ path: "packages", filterKeys: ["status", "payment_status", "delivery_status", "has_balance", "customer", "from", "to"] });
   const [editing, setEditing] = useState<Package | null>(null);
   const [paying, setPaying] = useState<Package | null>(null);
 
-  const viewing = useQuery({ queryKey: ["packages", "one", list.viewId], queryFn: () => adminApi.package(Number(list.viewId)), enabled: !!list.viewId, meta: VIEW_META });
-  const shown = viewing.data ?? null;
 
   const refreshAll = () => {
     list.invalidate();
@@ -44,6 +45,7 @@ export default function PackagesList() {
       { type: "select", key: "status", label: "Status", options: choices(options.data?.package_statuses ?? []), placeholder: "Any status" },
       { type: "select", key: "delivery_status", label: "Delivery", options: choices(options.data?.package_delivery_statuses ?? []), placeholder: "Any delivery" },
       { type: "select", key: "payment_status", label: "Payment", options: choices(options.data?.package_payment_statuses ?? []), placeholder: "Any payment" },
+      { type: "select", key: "has_balance", label: "Balance", options: [{ label: "Still owes", value: "1" }, { label: "Nothing owed", value: "0" }], placeholder: "Any balance" },
     ] },
     { title: "When", fields: [{ type: "dateRange", from: "from", to: "to", label: "Booked", days: true }] },
   ];
@@ -58,7 +60,10 @@ export default function PackagesList() {
           <Thumb src={p.photo_url} name={p.name} />
           <div>
             <p className="font-medium text-(--text-primary)">{p.name}</p>
-            <p className="whitespace-nowrap text-xs text-(--text-muted)">{[p.created_by?.name, p.created_by?.phone].filter(Boolean).join(" · ")}</p>
+            <p className="whitespace-nowrap text-xs text-(--text-muted)">
+              {p.created_by ? <PeekLink type="user" id={p.created_by.id} className="font-normal">{p.created_by.name}</PeekLink> : null}
+              {p.created_by?.phone ? ` · ${p.created_by.phone}` : ""}
+            </p>
           </div>
         </div>
       ),
@@ -71,7 +76,7 @@ export default function PackagesList() {
     { field: "delivery_status", header: "Delivery", body: (p: Package) => <Pill value={p.delivery_status} /> },
     { field: "payment_status", mobile: false, header: "Payment", body: (p: Package) => <Pill value={p.payment_status} /> },
     { field: "package_number", mobile: false, header: "Number", sortable: true, visible: false },
-    ...auditColumns<Package>({ people: false }),
+    ...auditColumns<Package>({ people: false, created: false }),
   ];
 
   const exportColumns: ExportColumn<Package>[] = [
@@ -94,6 +99,7 @@ export default function PackagesList() {
   return (
     <div className="space-y-5">
       <PageHeader title="Packages" subtitle="Deliveries customers book in the app. Set the price, follow the delivery, record payments." />
+      <CustomerContextBar onClear={() => list.setFilters({ customer: "" })} />
       <PrimeReactDataTable<Package>
         data={list.rows}
         columns={columns}
@@ -112,54 +118,17 @@ export default function PackagesList() {
         toolbarActions={[deleteSelectedAction<Package>(() => list.confirmDelete("package", "Packages with payments are kept: cancel those instead."))]}
       />
 
-      <RecordDetailsDialog
-        history={shown ? { type: "Package", id: shown.id } : undefined}
-        header={shown?.name ?? "Package"}
+      <PackageDetailsDialog
+        id={list.viewId}
         visible={!!list.viewId}
         onHide={list.closeView}
-        record={shown}
-        people={false}
-        width="min(44rem, 95vw)"
-        loading={viewing.isPending}
-        error={viewError(viewing, "package")}
-        links={shown?.photo_url ? <Thumb src={shown.photo_url} name={shown.name} size="h-40 w-40" /> : undefined}
-        fields={shown ? [
-          { label: "Customer", value: shown.created_by ? `${shown.created_by.name}${shown.created_by.phone ? ` · ${shown.created_by.phone}` : ""}` : "-" },
-          { label: "Booked", value: dateTime(shown.created_at) },
-          { label: "Pickup", value: shown.pickup ?? "-" },
-          { label: "Destination", value: shown.destination ?? "-" },
-          { label: "Status", value: <Pill value={shown.status} /> },
-          { label: "Delivery", value: <Pill value={shown.delivery_status} /> },
-          { label: "Charged", value: ugx(n(shown.charged_amount)) },
-          { label: "Paid", value: ugx(n(shown.amount_paid)) },
-          { label: "Balance due", value: <b>{ugx(n(shown.balance_due))}</b> },
-          { label: "Payment", value: <Pill value={shown.payment_status} /> },
-          { label: "Notes from the customer", value: shown.extraInfo || "-", wide: true },
-        ] : []}
-        footer={
-          <div className="flex flex-wrap justify-end gap-2">
-            <Button label="Close" text onClick={list.closeView} />
-            {shown && <Button label="Edit" icon="pi pi-pencil" outlined onClick={() => setEditing(shown)} />}
-            {shown && n(shown.balance_due) > 0 && shown.status !== "cancelled" && <Button label="Record payment" icon="pi pi-wallet" onClick={() => setPaying(shown)} />}
-          </div>
-        }
-      >
-        {shown && (
-          <section>
-            <h3 className="m-0 mb-2 text-sm font-semibold text-(--text-primary)">Payments</h3>
-            {shown.payments?.length ? (
-              <ul className="divide-y divide-(--border-color) rounded-xl border border-(--border-color)">
-                {shown.payments.map((p) => (
-                  <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
-                    <span><b>{ugx(n(p.amount))}</b> · {methodLabel(p.payment_method)}{p.transaction_number ? ` · ${p.transaction_number}` : ""}</span>
-                    <span className="text-xs text-(--text-muted)">{dateTime(p.created_at)}{p.created_by?.name ? ` by ${p.created_by.name}` : ""}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : <p className="m-0 text-sm text-(--text-muted)">No payments yet.</p>}
-          </section>
+        actions={(p) => (
+          <>
+            <Button label="Edit" icon="pi pi-pencil" outlined onClick={() => setEditing(p)} />
+            {n(p.balance_due) > 0 && p.status !== "cancelled" && <Button label="Record payment" icon="pi pi-wallet" onClick={() => setPaying(p)} />}
+          </>
         )}
-      </RecordDetailsDialog>
+      />
 
       <RecordForm<Row>
         visible={!!editing}

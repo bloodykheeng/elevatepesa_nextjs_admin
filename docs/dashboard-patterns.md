@@ -63,11 +63,37 @@ a table means an entry on both sides.
 ## The dashboard
 
 `components/dashboard/home/DashboardHome.tsx`: All time by default (a fixed recent window showed zeros once
-orders stopped); the period in the URL; every figure's arrow (on hover) opens the list it counts with the
-same filters (`/dashboard/orders?from=...&to=...&has_balance=1`). Counting rules are the API's
-(`DashboardController`): cancelled orders count in Orders but not in values or balances.
+orders stopped); the period and the filters in the URL; every figure's arrow (on hover) opens the list it counts
+with the same filters (`/dashboard/orders?from=...&to=...&has_balance=1`), and every figure's (i) says how it is
+worked out (`KpiCard`'s and `ChartCard`'s `help`). Counting rules are the API's (`DashboardController`): cancelled
+orders count in Orders but not in values or balances.
 
-## View dialogs
+- **Filters** (beside Pick days, at the right): what was ordered (product, inventory type, gas and water category,
+  electronics category) and the order's delivery, payment and mode, from `components/dashboard/admin/orderFilters.tsx`.
+  The API applies them with `Order::scopeMatching` on the dashboard, `GET /admin/orders` and `GET /admin/payments`
+  alike, so the arrows carry them (`listQuery({}, true)`) and the list counts the same rows. Packages, package
+  payments and customers follow the period only, and their (i) says so while a filter is on.
+- On All time the customers card is "Customers" (every one); with a period, "New customers" (joined in it).
+- Order payments and package payments are separate cards, each opening its own list.
+
+## View dialogs and related records
+
+The dialogs of an order, a package, a payment and an account live in `components/dashboard/records/` and are
+shared: the list page opens one from `?view=` with its own buttons (`actions`: Edit, Record payment, Message), and
+anything else opens one **over what you are reading** with `usePeek().open("order", id)` or a `<PeekLink>`
+(`records/peek.tsx`; drawn by `RecordPeekHost` in the layout). They stack (a payment, its order, the order's
+customer); Escape or Close takes off the top one; leaving the page closes them all. A peeked one's footer has
+"Open in Orders" for its own page. Never navigate to another list to show a related record (the user,
+14 Nov 2026: "a link to the order, not automatically going to orders").
+
+- A list narrowed to one customer (`?customer=`) shows `CustomerContextBar` at its top (NICE's visit bar): the
+  customer as a chip with an eye, their other lists (`CustomerLists`), and "Everyone" to clear.
+- `RecordDetailsDialog` takes `photo` (beside the fields from a tablet up, never alone with the right half empty)
+  and `top` (a summary band: totals, contact).
+- Editors may open a customer's account (`GET /admin/users/{id}`), never a staff one; the Customers & staff page
+  stays Admin-only.
+- Two columns on one field crash the table (a repeated React key): `auditColumns({ created: false })` where a list
+  shows `created_at` under its own name ("Placed", "Booked"). The table drops a repeat and warns in development.
 
 A View query passes `meta: VIEW_META` and its dialog shows `viewError(query, "order")`
 (`components/dashboard/admin/parts.tsx`): a link to a deleted record (an old bell alert) reads "This order no
@@ -78,7 +104,9 @@ longer exists: it was deleted." instead of a raw API error toast. `RecordDetails
 
 `app/dashboard/audit-trail/`: the API's `activity_log` (pesa_back `docs/audit-trail.md`). Values arrive frozen
 (relation and enum labels as they were); `components/dashboard/admin/AuditValue.tsx` only formats them.
-`?subject_type=Order&subject_id=5` is one record's history, `?request=` one request, `?causer=` one person.
+`?subject_type=Order&subject_id=5` is one record's history, `?request=` one request, `?causer=` one person,
+`?kind=changes` or `?kind=sign_ins` the two tabs. Each row shows its first changes (`changes_preview`), the device
+("Chrome 158 on Windows") and the IP; "View the record" peeks an order, package, payment or account.
 
 ## The bell
 

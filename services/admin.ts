@@ -26,7 +26,7 @@ export const update = <T>(path: string, id: number | string, body: FormData | ob
 export const bulkDelete = (path: string, ids: (number | string)[]) => post<{ message: string }>(`/admin/${path}/bulk-delete`, { ids });
 
 export const adminApi = {
-  dashboard: (params: { from?: string; to?: string }) => get<Dashboard>("/admin/dashboard", params),
+  dashboard: (params: Params) => get<Dashboard>("/admin/dashboard", params),
   options: () => get<Options>("/admin/options"),
 
   orders: (params: Params) => listOf<Order>("orders", params),
@@ -41,6 +41,8 @@ export const adminApi = {
 
   payments: (params: Params) => listOf<Payment>("payments", params),
   packagePayments: (params: Params) => listOf<Payment>("package-payments", params),
+  payment: (id: number) => one<Payment>("payments", id),
+  packagePayment: (id: number) => one<Payment>("package-payments", id),
 
   products: (params: Params) => listOf<Product>("products", params),
 

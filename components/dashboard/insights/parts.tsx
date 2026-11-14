@@ -103,7 +103,10 @@ export function KpiCard({
   openLabel,
   loading,
   bar,
+  help,
 }: {
+  /** How the figure is worked out, behind an (i) beside the label (NICE's InfoHint): what is counted, what is not. */
+  help?: string;
   label: string;
   value: number | null | undefined;
   /** How to show it, when not a plain count ("83%", "UGX 1.2M"). */
@@ -126,7 +129,10 @@ export function KpiCard({
         <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-(--brand-light) text-(--brand-ink)" aria-hidden>
           <i className={`pi ${icon} text-sm`} />
         </span>
-        <p className="m-0 min-w-0 flex-1 text-sm font-medium text-(--text-secondary)">{label}</p>
+        <p className="m-0 flex min-w-0 flex-1 items-center gap-1.5 text-sm font-medium text-(--text-secondary)">
+          <span className="truncate">{label}</span>
+          {help && <InfoHint text={help} title={label} variant="info" />}
+        </p>
         {href && <OpenLink quiet href={href} label={`Open ${openLabel ?? label.toLowerCase()}`} />}
       </div>
       {loading ? (

@@ -160,7 +160,7 @@ export default function ProductsList() {
         record={shown}
         loading={viewing.isPending}
         error={viewError(viewing, "product")}
-        links={shown ? <Thumb src={shown.photo_url} name={shown.name} size="h-44 w-44" /> : undefined}
+        photo={shown ? <Thumb src={shown.photo_url} name={shown.name} size="h-40 w-40" /> : undefined}
         fields={shown ? [
           { label: "Price", value: <b>{ugx(Number(shown.price))}</b> },
           { label: "In stock", value: shown.quantity.toLocaleString("en-UG") },

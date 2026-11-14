@@ -10,6 +10,8 @@ import AppSidebar from "./AppSidebar";
 import AppHeader from "./AppHeader";
 import PageAccessGuard from "./PageAccessGuard";
 import { ConfirmActionHost } from "@/components/dashboard/ConfirmAction";
+import { RecordPeekProvider } from "@/components/dashboard/records/peek";
+import RecordPeekHost from "@/components/dashboard/records/RecordPeekHost";
 // Single source of truth for the nav and for page access: see lib/menuItems.ts.
 import { menuGroups } from "@/lib/menuItems";
 import { useScrollMemory } from "@/hooks/useScrollMemory";
@@ -93,6 +95,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* The header sits above every route and cannot know what a dynamic
           segment points at, so the route tells it. See BreadcrumbContext: the
           alternative was a breadcrumb reading 26 characters of ULID. */}
+      {/* A related record (an order's customer, a payment's order) opens over the page: see records/peek.tsx. */}
+      <RecordPeekProvider>
       <BreadcrumbProvider>
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <AppHeader />
@@ -108,6 +112,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </main>
         </div>
       </BreadcrumbProvider>
+      <RecordPeekHost />
+      </RecordPeekProvider>
 
       {/* Every "Are you sure?" in the dashboard: see ConfirmAction. */}
       <ConfirmActionHost />

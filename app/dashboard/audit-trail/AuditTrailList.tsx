@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { Button } from "primereact/button";
+import { SelectButton } from "primereact/selectbutton";
+import { Dropdown } from "primereact/dropdown";
 import { useQuery } from "@tanstack/react-query";
+import { usePeek, type PeekType } from "@/components/dashboard/records/peek";
 import PrimeReactDataTable, { viewAction } from "@/components/dashboard/tables/PrimeReactDataTable";
 import FiltersButton, { filterValuesFrom, type FilterGroup } from "@/components/dashboard/filters/FiltersButton";
 import { Dialog } from "@/components/common/Dialog";
@@ -38,6 +41,44 @@ const RECORD_PAGE: Record<string, string> = {
   ExploreCategoryBlog: "/dashboard/catalog/explore-category-blogs", Ad: "/dashboard/catalog/ads", Faq: "/dashboard/catalog/faqs",
   Referal: "/dashboard/catalog/referrals",
 };
+/** The records that open over the entry, without leaving the audit trail. */
+const PEEK_TYPE: Record<string, PeekType> = { Order: "order", Package: "package", User: "user", Payment: "payment", PackagePayment: "package-payment" };
+
+const KINDS = [
+  { label: "Everything", value: "" },
+  { label: "Changes to records", value: "changes" },
+  { label: "Sign-ins and sign-outs", value: "sign_ins" },
+];
+
+const changeText = (e: AuditEntry) =>
+  (e.changes_preview ?? []).map((c) => `${c.label}: ${c.secret ? "changed" : `${c.old ?? "empty"} → ${c.new ?? "empty"}`}`).join("; ");
+
+/** What changed, a line per field: "Status: Pending → Delivered". A password says only that it changed. */
+function ChangedLines({ e }: { e: AuditEntry }) {
+  if (e.event === "created") return <span className="text-xs text-(--text-muted)">New record</span>;
+  if (e.event === "deleted") return <span className="text-xs text-(--text-muted)">Removed, with everything it held</span>;
+  if (e.event === "sign_in_failed") return <span className="text-xs text-amber-700 dark:text-amber-400">Wrong email or password</span>;
+  if (!e.changes_preview?.length) return <span className="text-(--text-muted)">-</span>;
+  const more = (e.changed ?? 0) - e.changes_preview.length;
+  return (
+    <ul className="m-0 max-w-sm list-none space-y-0.5 p-0 text-xs">
+      {e.changes_preview.map((c, i) => (
+        <li key={i} className="truncate">
+          <span className="font-semibold text-(--text-primary)">{c.label}:</span>{" "}
+          {c.secret ? <span className="text-(--text-muted)">changed (never shown)</span> : (
+            <>
+              <span className="text-(--text-muted) line-through decoration-red-400/60">{c.old ?? "empty"}</span>
+              <i className="pi pi-arrow-right mx-1 text-[9px] text-(--text-muted)" aria-hidden />
+              <span className="text-(--text-primary)">{c.new ?? "empty"}</span>
+            </>
+          )}
+        </li>
+      ))}
+      {more > 0 && <li className="text-(--text-muted)">and {more} more</li>}
+    </ul>
+  );
+}
+
 const recordHref = (e: Pick<AuditEntry, "subject_type" | "subject_id">) =>
   e.subject_type && e.subject_id && RECORD_PAGE[e.subject_type] ? `${RECORD_PAGE[e.subject_type]}?view=${e.subject_id}` : null;
 
@@ -65,8 +106,9 @@ function Who({ e }: { e: AuditEntry }) {
 export default function AuditTrailList() {
   const list = useAdminList<AuditEntry>({
     path: "audit-trail",
-    filterKeys: ["module", "event", "source", "causer", "subject_type", "subject_id", "request", "from", "to"],
+    filterKeys: ["kind", "module", "event", "source", "causer", "subject_type", "subject_id", "request", "from", "to"],
   });
+  const { open: peek } = usePeek();
   const modules = (list.query.data as { modules?: string[] } | undefined)?.modules ?? [];
 
   const viewing = useQuery({ queryKey: ["audit-trail", "one", list.viewId], queryFn: () => adminApi.auditEntry(Number(list.viewId)), enabled: !!list.viewId, meta: VIEW_META });
@@ -91,9 +133,17 @@ export default function AuditTrailList() {
     { field: "created_at", header: "When", sortable: true, body: (e: AuditEntry) => <div className="whitespace-nowrap"><p className="m-0 text-sm">{dateTime(e.created_at)}</p><p className="m-0 text-xs text-(--text-muted)">{timeAgo(e.created_at)}</p></div>, exportValue: (e: AuditEntry) => dateTime(e.created_at) },
     { field: "causer", header: "Who", body: (e: AuditEntry) => <Who e={e} />, exportValue: (e: AuditEntry) => e.causer?.name ?? "" },
     { field: "event", header: "Action", sortable: true, body: (e: AuditEntry) => <Pill value={e.event} label={e.event_label} />, exportValue: (e: AuditEntry) => e.event_label },
-    { field: "title", header: "Record", body: (e: AuditEntry) => <div className="max-w-xs min-w-0"><p className="m-0 truncate text-sm text-(--text-primary)">{e.title ?? e.description}</p><p className="m-0 truncate text-xs text-(--text-muted)">{e.module}{e.changed ? ` · ${e.changed} change${e.changed === 1 ? "" : "s"}` : ""}</p></div>, exportValue: (e: AuditEntry) => e.title ?? "" },
-    { field: "source", mobile: false, header: "From", body: (e: AuditEntry) => <span className="whitespace-nowrap text-sm">{sourceLabel(e.source)}</span>, exportValue: (e: AuditEntry) => sourceLabel(e.source) },
-    { field: "ip", mobile: false, header: "IP address", visible: false, body: (e: AuditEntry) => e.ip ?? "-" },
+    { field: "title", header: "Record", body: (e: AuditEntry) => <div className="max-w-xs min-w-0"><p className="m-0 truncate text-sm text-(--text-primary)">{e.title ?? e.description}</p><p className="m-0 truncate text-xs text-(--text-muted)">{e.module}</p></div>, exportValue: (e: AuditEntry) => e.title ?? "" },
+    { field: "changes_preview", header: "What changed", body: (e: AuditEntry) => <ChangedLines e={e} />, exportValue: changeText },
+    {
+      field: "device", mobile: false, header: "From", body: (e: AuditEntry) => (
+        <div className="min-w-0 text-xs">
+          <p className="m-0 whitespace-nowrap text-sm text-(--text-primary)">{sourceLabel(e.source)}</p>
+          {e.device && <p className="m-0 whitespace-nowrap text-(--text-muted)">{e.device}</p>}
+          {e.ip && <p className="m-0 whitespace-nowrap font-mono text-[11px] text-(--text-muted)">IP {e.ip}</p>}
+        </div>
+      ), exportValue: (e: AuditEntry) => sourceLabel(e.source),
+    },
   ];
 
   const exportColumns: ExportColumn<AuditEntry>[] = [
@@ -104,11 +154,14 @@ export default function AuditTrailList() {
     { header: "Action", value: (e) => e.event_label },
     { header: "Module", value: (e) => e.module ?? "" },
     { header: "What happened", value: (e) => e.description },
+    { header: "What changed", value: changeText },
     { header: "From", value: (e) => sourceLabel(e.source) },
+    { header: "Device", value: (e) => e.device ?? "" },
     { header: "IP address", value: (e) => e.ip ?? "" },
   ];
 
   const recordLink = shown ? recordHref(shown) : null;
+  const peekType = shown?.subject_type ? PEEK_TYPE[shown.subject_type] : undefined;
 
   return (
     <div className="space-y-5">
@@ -125,6 +178,16 @@ export default function AuditTrailList() {
           <div className="flex flex-wrap items-center gap-2">
             <ListSearch value={list.search} onSearch={(v) => list.setFilters({ search: v })} placeholder="Record, person or detail" />
             <FiltersButton groups={filterGroups} values={filterValuesFrom(filterGroups, list.getParam)} onApply={list.setFilters} />
+            {/* The two things people come here for, one tap apart; a dropdown below a laptop, where three buttons
+                are cut short. The hiding is on wrappers: PrimeReact's own display rule beats a class on the component. */}
+            <div className="hidden xl:block">
+              <SelectButton value={list.getParam("kind")} options={KINDS} optionLabel="label" optionValue="value" allowEmpty={false}
+                onChange={(ev) => list.setFilters({ kind: ev.value ?? "" })} aria-label="Show" />
+            </div>
+            <div className="w-full sm:w-64 xl:hidden">
+              <Dropdown value={list.getParam("kind")} options={KINDS} optionLabel="label" optionValue="value"
+                onChange={(ev) => list.setFilters({ kind: ev.value ?? "" })} aria-label="Show" className="w-full" />
+            </div>
           </div>
         }
         statusChips={narrowed ? (
@@ -148,9 +211,11 @@ export default function AuditTrailList() {
         maximizable
         footer={
           <div className="flex flex-wrap justify-end gap-2">
-            {recordLink && shown?.event !== "deleted" && (
-              <Link href={recordLink} onClick={list.closeView} className="p-button p-button-outlined p-button-sm no-underline">Open the record</Link>
-            )}
+            {shown?.event !== "deleted" && shown?.subject_id && peekType ? (
+              <Button label="View the record" icon="pi pi-eye" outlined onClick={() => peek(peekType, shown.subject_id!)} />
+            ) : recordLink && shown?.event !== "deleted" ? (
+              <Link href={recordLink} onClick={list.closeView} className="p-button p-button-outlined no-underline">Open the record</Link>
+            ) : null}
             <Button label="Close" text onClick={list.closeView} />
           </div>
         }
@@ -181,14 +246,32 @@ export default function AuditTrailList() {
               </section>
             )}
 
-            <section className="rounded-xl bg-(--bg-page) p-3 text-xs text-(--text-secondary)">
-              <p className="m-0 mb-1 font-semibold text-(--text-primary)">Request</p>
-              <p className="m-0 wrap-break-word">
-                {shown.request?.method} {shown.request?.path}{shown.request?.command ? `artisan ${shown.request.command}` : ""}
-                {shown.request?.ip ? ` · IP ${shown.request.ip}` : ""}
-              </p>
-              {shown.request?.user_agent && <p className="m-0 mt-1 wrap-break-word text-(--text-muted)">{shown.request.user_agent}</p>}
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+            {shown.request && (
+              <section>
+                <h3 className="m-0 mb-2 text-sm font-semibold text-(--text-primary)">Device and network</h3>
+                <dl className="grid grid-cols-2 gap-x-6 gap-y-3 rounded-xl bg-(--bg-page) p-3">
+                  {shown.request.device && (
+                    <>
+                      <div className="min-w-0"><dt className="mb-0.5 text-xs text-(--text-muted)">Device</dt><dd className="wrap-break-word">{shown.request.device.summary}</dd></div>
+                      <div><dt className="mb-0.5 text-xs text-(--text-muted)">Kind</dt><dd>{shown.request.device.kind}</dd></div>
+                    </>
+                  )}
+                  <div><dt className="mb-0.5 text-xs text-(--text-muted)">IP address</dt><dd className="font-mono">{shown.request.ip ?? "-"}</dd></div>
+                  <div className="min-w-0">
+                    <dt className="mb-0.5 text-xs text-(--text-muted)">Request</dt>
+                    <dd className="wrap-break-word font-mono text-xs">{shown.request.command ? `artisan ${shown.request.command}` : `${shown.request.method ?? ""} ${shown.request.path ?? ""}`}</dd>
+                  </div>
+                  {shown.request.user_agent && (
+                    <div className="col-span-2 min-w-0">
+                      <dt className="mb-0.5 text-xs text-(--text-muted)">Browser details (user agent)</dt>
+                      <dd className="wrap-break-word text-xs text-(--text-muted)">{shown.request.user_agent}</dd>
+                    </div>
+                  )}
+                </dl>
+              </section>
+            )}
+            <section className="text-sm">
+              <div className="flex flex-wrap gap-x-4 gap-y-1">
                 {shown.subject_type && shown.subject_id && (
                   <Link href={historyHref(shown.subject_type, shown.subject_id)} onClick={list.closeView} className="font-medium text-(--brand-ink)">This record&apos;s history</Link>
                 )}

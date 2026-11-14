@@ -40,10 +40,13 @@ test("a link to a deleted record says so, without an error toast", async ({ page
   await expect(page.getByText(/No query results/)).toHaveCount(0);
 });
 
-test("the audit trail shows an edit, before and after", async ({ page }) => {
+test("the audit trail says where an entry came from", async ({ page }) => {
   // Every signed-in test run writes at least its own sign-in.
-  await page.goto("/dashboard/audit-trail");
+  await page.goto("/dashboard/audit-trail?kind=sign_ins");
   await expect(page.locator("tbody tr").first()).toBeVisible();
+  await expect(page.locator("tbody tr").first().getByText(/IP /)).toBeVisible();
   await page.getByRole("button", { name: "View details" }).first().click();
-  await expect(page.getByRole("dialog").getByText("Request")).toBeVisible();
+  const entry = page.getByRole("dialog");
+  await expect(entry.getByRole("heading", { name: "Device and network" })).toBeVisible();
+  await expect(entry.getByText("Browser details (user agent)")).toBeVisible();
 });

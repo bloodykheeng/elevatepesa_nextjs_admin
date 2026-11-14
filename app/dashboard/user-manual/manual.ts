@@ -85,6 +85,11 @@ export const MANUAL: ManualChapter[] = [
             body: "The menu on the left holds every page your role can open. The bell at the top right counts new alerts: new orders, package bookings, sign-ups, and messages you sent once they finish. Click one to open it.",
           },
           {
+            title: "Related records open where you are",
+            body: "Names in green open their own details over what you are reading: the customer on an order, the order a payment paid, an order in a customer's latest orders. Close it and you are back where you were. Each has a way to its own page (Open in Orders) for its Edit and Record payment.",
+            notes: ["A list narrowed to one customer (from their details, or a dashboard arrow) shows them in a bar at the top, with their other lists one click away and an x to show everyone again."],
+          },
+          {
             title: "Lists remember where you were",
             body: "Every list keeps its page, search, filters and sort in the address. Open a record, press Back, and you are on the same page with the same filters, at the same scroll place. You can also copy the address to share exactly what you see.",
           },
@@ -111,8 +116,13 @@ export const MANUAL: ManualChapter[] = [
         topics: [
           {
             title: "Reading the dashboard",
-            body: "It opens on All time. Pick Today, Last 30 days, This month, This year, or Pick days for any range. Each card's small arrow (shown when you point at the card) opens the list behind the figure, with the same period.",
-            notes: ["Cancelled orders are left out of values, paid and balances, but counted in Orders.", "Days are Kampala days."],
+            body: "It opens on All time. Pick Today, Last 30 days, This month, This year, or Pick days (at the right) for any range. Each card's small arrow (shown when you point at the card) opens the list behind the figure, with the same period and filters, so the list counts the same rows. The (i) beside a card's name says how its figure is worked out.",
+            notes: ["Cancelled orders are left out of values, paid and balances, but counted in Orders.", "Days are Kampala days.", "On All time the customers card counts every customer; with a period, only those who joined in it."],
+          },
+          {
+            title: "Filter by product, category or status",
+            body: "Filters (beside Pick days) narrows the order figures to orders with a product, an inventory type, a gas and water category or an electronics category, and by delivery, payment or mode. An order counts when any of its items matches. The line under the period buttons says what is in force; Clear goes back to everything.",
+            notes: ["Packages, package payments and customers follow the period only: their (i) says so while a filter is on."],
           },
         ],
       },
@@ -167,7 +177,7 @@ export const MANUAL: ManualChapter[] = [
         topics: [
           {
             title: "Order and package payments",
-            body: "Two lists under Payments: order payments and package payments. Filter by method and dates, and export them. To add a payment, open its order or package.",
+            body: "Two lists under Payments: order payments and package payments. Filter by method and dates, and export them. The eye opens the payment: amount, method, transaction number, who recorded it, and the order (or package) it paid, which opens over it. To add a payment, open its order or package and press Record payment.",
           },
         ],
       },
@@ -309,7 +319,7 @@ export const MANUAL: ManualChapter[] = [
         topics: [
           {
             title: "What it records",
-            body: "Every order, package, payment, product, catalogue item, advert, FAQ and account created, edited or deleted, in the admin or in the mobile app, plus every sign-in, sign-out and failed sign-in. Each entry says who, when, from where (admin dashboard, mobile app) and what exactly changed.",
+            body: "Every order, package, payment, product, catalogue item, advert, FAQ and account created, edited or deleted, in the admin or in the mobile app, plus every sign-in, sign-out and failed sign-in. Each row says who, when, what changed (Status: Pending → Delivered), from where (admin dashboard, mobile app), the device (Chrome on Windows, the app on Android) and the IP address. The tabs at the top show only changes to records, or only sign-ins and sign-outs.",
             notes: [
               "An edit shows each changed field before and after. A create or delete shows the whole record as it was, so a deleted order can still be read.",
               "Names are kept as they were then: renaming a brand later does not change old entries.",
@@ -323,7 +333,7 @@ export const MANUAL: ManualChapter[] = [
           },
           {
             title: "Finding something",
-            body: "Search by a record, a person or a detail; Filters narrow it by module, action (created, edited, deleted, signed in...), where it came from, and days.",
+            body: "Search by a record, a person or a detail; Filters narrow it by module, action (created, edited, deleted, signed in...), where it came from, and days. Open an entry for every field before and after, the device and network, and View the record to open the order, payment or account over it.",
             warning: "Several failed sign-ins for the same email in a short time can mean someone guessing a password: check the IP address in the entry and make the account inactive if needed.",
           },
         ],

@@ -2,22 +2,26 @@
 
 import { useState } from "react";
 import { Button } from "primereact/button";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import PrimeReactDataTable, { deleteSelectedAction, editAction, viewAction } from "@/components/dashboard/tables/PrimeReactDataTable";
 import FiltersButton, { filterValuesFrom, type FilterGroup } from "@/components/dashboard/filters/FiltersButton";
-import { RecordDetailsDialog, auditColumns, auditExportColumns } from "@/components/dashboard/audit";
+import { auditColumns, auditExportColumns } from "@/components/dashboard/audit";
+import { OrderDetailsDialog } from "@/components/dashboard/records/OrderDetailsDialog";
+import { CustomerContextBar } from "@/components/dashboard/records/shared";
+import { PeekLink } from "@/components/dashboard/records/peek";
 import { PageHeader } from "@/components/dashboard/ui";
 import RecordForm, { useOptions } from "@/components/dashboard/admin/RecordForm";
 import PaymentDialog from "@/components/dashboard/admin/PaymentDialog";
+import { ORDER_ITEM_KEYS, useOrderItemGroup } from "@/components/dashboard/admin/orderFilters";
 import { useAdminList } from "@/components/dashboard/admin/useAdminList";
-import { ListSearch, Pill, Thumb, choices, methodLabel, modeLabel, VIEW_META, viewError } from "@/components/dashboard/admin/parts";
+import { ListSearch, Pill, choices, modeLabel } from "@/components/dashboard/admin/parts";
 import { adminApi } from "@/services/admin";
 import type { Order } from "@/services/types/pesa";
 import { asDate, type ExportColumn } from "@/lib/exportRows";
 import { dateTime, ugx } from "@/lib/format";
 
 const n = (v: unknown) => Number(v ?? 0);
-const FILTER_KEYS = ["status", "payment_status", "delivery_status", "payment_mode", "has_balance", "customer", "from", "to"];
+const FILTER_KEYS = ["status", "payment_status", "delivery_status", "payment_mode", "has_balance", "customer", "from", "to", ...ORDER_ITEM_KEYS];
 
 /**
  * Orders customers placed in the app: find one, follow its delivery, record what was paid.
@@ -30,9 +34,8 @@ export default function OrdersList() {
   const [editing, setEditing] = useState<Order | null>(null);
   const [paying, setPaying] = useState<Order | null>(null);
 
-  const viewing = useQuery({ queryKey: ["orders", "one", list.viewId], queryFn: () => adminApi.order(Number(list.viewId)), enabled: !!list.viewId, meta: VIEW_META });
-  const shown = viewing.data ?? null;
 
+  const itemGroup = useOrderItemGroup();
   const filterGroups: FilterGroup[] = [
     { title: "Where it stands", fields: [
       { type: "select", key: "status", label: "Status", options: choices(options.data?.order_statuses ?? []), placeholder: "Any status" },
@@ -43,11 +46,9 @@ export default function OrdersList() {
       { type: "select", key: "payment_mode", label: "Mode", options: choices(options.data?.payment_modes ?? [], modeLabel), placeholder: "Any mode" },
       { type: "select", key: "has_balance", label: "Balance", options: [{ label: "Still owes", value: "1" }, { label: "Nothing owed", value: "0" }], placeholder: "Any balance" },
     ] },
+    itemGroup,
     { title: "When", fields: [{ type: "dateRange", from: "from", to: "to", label: "Placed", days: true }] },
   ];
-
-  const customerId = list.getParam("customer");
-  const customerName = customerId ? list.rows[0]?.created_by?.name : null;
 
   const refreshAll = () => {
     list.invalidate();
@@ -63,7 +64,10 @@ export default function OrdersList() {
       body: (o: Order) => (
         <div>
           <p className="font-mono text-sm font-semibold text-(--text-primary)">#{o.order_number}</p>
-          <p className="whitespace-nowrap text-xs text-(--text-muted)">{[o.created_by?.name, o.created_by?.phone].filter(Boolean).join(" · ")}</p>
+          <p className="whitespace-nowrap text-xs text-(--text-muted)">
+            {o.created_by ? <PeekLink type="user" id={o.created_by.id} className="font-normal">{o.created_by.name}</PeekLink> : null}
+            {o.created_by?.phone ? ` · ${o.created_by.phone}` : ""}
+          </p>
         </div>
       ),
     },
@@ -76,7 +80,7 @@ export default function OrdersList() {
     { field: "delivery_status", header: "Delivery", sortable: true, body: (o: Order) => <Pill value={o.delivery_status} /> },
     { field: "address", mobile: false, header: "Address", visible: false, body: (o: Order) => o.address ?? "-" },
     { field: "order_products_count", mobile: false, header: "Items", visible: false },
-    ...auditColumns<Order>({ people: false }),
+    ...auditColumns<Order>({ people: false, created: false }),
   ];
 
   const exportColumns: ExportColumn<Order>[] = [
@@ -101,15 +105,7 @@ export default function OrdersList() {
     <div className="space-y-5">
       <PageHeader title="Orders" subtitle="What customers ordered in the app. Open one to follow its delivery or record a payment." />
 
-      {customerId && (
-        <p className="-mt-2 flex items-center gap-2 text-sm text-(--text-secondary)">
-          <i className="pi pi-user text-xs text-(--text-muted)" aria-hidden />
-          Orders of {customerName ?? `customer #${customerId}`}
-          <button type="button" onClick={() => list.setFilters({ customer: "" })} className="inline-flex items-center gap-1 text-xs font-medium text-(--brand-ink) underline">
-            <i className="pi pi-times text-[0.6rem]" aria-hidden /> Show every customer
-          </button>
-        </p>
-      )}
+      <CustomerContextBar onClear={() => list.setFilters({ customer: "" })} />
 
       <PrimeReactDataTable<Order>
         data={list.rows}
@@ -129,76 +125,17 @@ export default function OrdersList() {
         toolbarActions={[deleteSelectedAction<Order>(() => list.confirmDelete("order", "Orders with payments are kept: cancel those instead. Deleting removes the order and its items for good."))]}
       />
 
-      <RecordDetailsDialog
-        history={shown ? { type: "Order", id: shown.id } : undefined}
-        header={shown ? `Order #${shown.order_number}` : "Order"}
+      <OrderDetailsDialog
+        id={list.viewId}
         visible={!!list.viewId}
         onHide={list.closeView}
-        record={shown}
-        people={false}
-        width="min(48rem, 95vw)"
-        loading={viewing.isPending}
-        error={viewError(viewing, "order")}
-        fields={shown ? [
-          { label: "Customer", value: shown.created_by ? <span>{shown.created_by.name}<br /><span className="text-xs text-(--text-muted)">{[shown.created_by.phone, shown.created_by.email].filter(Boolean).join(" · ")}</span></span> : "-" },
-          { label: "Placed", value: dateTime(shown.created_at) },
-          { label: "Status", value: <Pill value={shown.status} /> },
-          { label: "Delivery", value: <Pill value={shown.delivery_status} /> },
-          { label: "Payment", value: <span className="flex items-center gap-2"><Pill value={shown.payment_status} /> {modeLabel(shown.payment_mode)}</span> },
-          { label: "Address", value: shown.address ?? "-" },
-          { label: "Charged", value: ugx(n(shown.charged_amount)) },
-          { label: "Paid", value: ugx(n(shown.amount_paid)) },
-          { label: "Balance due", value: <b className={n(shown.balance_due) > 0 ? "text-red-600 dark:text-red-400" : ""}>{ugx(n(shown.balance_due))}</b> },
-        ] : []}
-        footer={
-          <div className="flex flex-wrap justify-end gap-2">
-            <Button label="Close" text onClick={list.closeView} />
-            {shown && <Button label="Edit" icon="pi pi-pencil" outlined onClick={() => setEditing(shown)} />}
-            {shown && canPay(shown) && <Button label="Record payment" icon="pi pi-wallet" onClick={() => setPaying(shown)} />}
-          </div>
-        }
-      >
-        {shown && (
-          <div className="space-y-5">
-            <section>
-              <h3 className="m-0 mb-2 text-sm font-semibold text-(--text-primary)">Items</h3>
-              <div className="overflow-x-auto rounded-xl border border-(--border-color)">
-                <table className="w-full text-sm">
-                  <thead className="bg-(--bg-page) text-left text-xs text-(--text-muted)">
-                    <tr><th className="px-3 py-2">Product</th><th className="px-3 py-2 text-right">Price</th><th className="px-3 py-2 text-right">Qty</th><th className="px-3 py-2 text-right">Total</th></tr>
-                  </thead>
-                  <tbody>
-                    {(shown.order_products ?? []).map((l) => (
-                      <tr key={l.id} className="border-t border-(--border-color)">
-                        <td className="px-3 py-2"><span className="flex items-center gap-2"><Thumb src={l.product?.photo_url} name={l.name} size="h-8 w-8" />{l.name}</span></td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap">{ugx(n(l.price))}</td>
-                        <td className="px-3 py-2 text-right">{l.quantity}</td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap font-medium">{ugx(n(l.price) * l.quantity)}</td>
-                      </tr>
-                    ))}
-                    {!shown.order_products?.length && <tr><td colSpan={4} className="px-3 py-4 text-center text-(--text-muted)">No items recorded.</td></tr>}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-            <section>
-              <h3 className="m-0 mb-2 text-sm font-semibold text-(--text-primary)">Payments</h3>
-              {shown.payments?.length ? (
-                <ul className="divide-y divide-(--border-color) rounded-xl border border-(--border-color)">
-                  {shown.payments.map((p) => (
-                    <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
-                      <span><b>{ugx(n(p.amount))}</b> · {methodLabel(p.payment_method)}{p.transaction_number ? ` · ${p.transaction_number}` : ""}</span>
-                      <span className="text-xs text-(--text-muted)">{dateTime(p.created_at)}{p.created_by?.name ? ` by ${p.created_by.name}` : ""}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="m-0 text-sm text-(--text-muted)">No payments yet.</p>
-              )}
-            </section>
-          </div>
+        actions={(o) => (
+          <>
+            <Button label="Edit" icon="pi pi-pencil" outlined onClick={() => setEditing(o)} />
+            {canPay(o) && <Button label="Record payment" icon="pi pi-wallet" onClick={() => setPaying(o)} />}
+          </>
         )}
-      </RecordDetailsDialog>
+      />
 
       <RecordForm<Order & Record<string, unknown>>
         visible={!!editing}

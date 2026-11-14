@@ -43,7 +43,11 @@ export interface AuditEntry {
   source: "admin" | "old-admin" | "app" | "system" | null;
   request_id: string | null;
   changed: number | null;
+  /** The first few changes, as text ("Status: Pending → Delivered"). */
+  changes_preview: { label: string; old: string | null; new: string | null; secret: boolean }[];
   ip: string | null;
+  /** "Chrome 158 on Windows", "The app on Android 14". */
+  device: string | null;
 }
 
 export type AuditValueType = "string" | "text" | "enum" | "relation" | "date" | "datetime" | "boolean" | "number" | "money" | "file" | "secret" | "list";
@@ -59,7 +63,10 @@ export interface AuditField {
 export interface AuditEntryDetail extends AuditEntry {
   snapshot: AuditField[] | null;
   changes: AuditField[] | null;
-  request: { id?: string; method?: string; path?: string; ip?: string; user_agent?: string; command?: string } | null;
+  request: {
+    id?: string; method?: string; path?: string; ip?: string; user_agent?: string; command?: string;
+    device?: { kind: string; platform: string | null; browser: string | null; summary: string };
+  } | null;
   extra: Record<string, unknown> | null;
   same_request: number;
 }
@@ -168,6 +175,7 @@ export interface Account {
   created_at: string | null;
   updated_at: string | null;
   orders?: Order[];
+  packages?: Package[];
   totals?: { orders_value: number; paid: number; balance_due: number };
 }
 
@@ -236,10 +244,14 @@ export interface Options {
 
 export interface Dashboard {
   period: { from: string | null; to: string | null };
+  /** An order filter (product, category, status) is in force: the order figures and order payments are narrowed. */
+  filtered: boolean;
   orders: { count: number; cancelled: number; value: number; paid: number; balance_due: number; with_balance: number; by_delivery: Record<string, number> };
-  packages: { count: number; value: number; paid: number; balance_due: number };
+  packages: { count: number; value: number; paid: number; balance_due: number; with_balance: number };
   customers: { total: number; new: number };
+  /** Order payments only (narrowed by the order filters). */
   payments: { count: number; amount: number; by_method: { method: string; count: number; amount: number }[] };
+  package_payments: { count: number; amount: number };
   monthly: { month: string; orders: number; value: number; paid: number }[];
   top_products: { product_id: number | null; name: string; quantity: number; value: number }[];
   top_customers: { user_id: number; name: string; orders: number; value: number; balance_due: number }[];
