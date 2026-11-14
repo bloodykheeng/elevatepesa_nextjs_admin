@@ -232,7 +232,8 @@ export interface Options {
   product_categories: (Named & { status: string })[];
   category_brands: (Named & { status: string; product_categories_id: number })[];
   product_types: (Named & { status: string })[];
-  inventory_types: (Named & { status: string })[];
+  /** `side`: which branch of the catalogue its products are on (components/dashboard/admin/catalogue.ts). */
+  inventory_types: (Named & { status: string; side?: "gas_water" | "electronics" })[];
   electronic_categories: (Named & { status: string })[];
   electronic_brands: (Named & { status: string; electronic_categories_id: number })[];
   electronic_types: (Named & { status: string; electronic_brands_id: number })[];

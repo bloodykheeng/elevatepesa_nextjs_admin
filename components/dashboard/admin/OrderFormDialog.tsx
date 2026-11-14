@@ -20,6 +20,7 @@ import { ugx } from "@/lib/format";
 import { useOptions } from "./RecordForm";
 import { choices, modeLabel } from "./parts";
 import { PlacedAtField, customerPicker } from "./pickers";
+import ProductFinderDialog from "./ProductFinderDialog";
 
 type Line = { product: Option | null; quantity: number | null; price: number | null };
 type Values = {
@@ -99,6 +100,8 @@ export default function OrderFormDialog({ visible, onHide, onSaved, editId = nul
   const { fields, append, remove } = useFieldArray({ control, name: "items" });
   // The charge follows the items' total until someone types their own (or, editing, it already differed).
   const [chargeTyped, setChargeTyped] = useState(false);
+  // The item line whose funnel is open (the product finder), or null.
+  const [finderFor, setFinderFor] = useState<number | null>(null);
   useEffect(() => {
     if (!visible) return;
     reset(initial);
@@ -199,16 +202,22 @@ export default function OrderFormDialog({ visible, onHide, onSaved, editId = nul
               return (
                 <div key={f.id} className="grid grid-cols-2 items-start gap-2 rounded-xl border border-(--border-color) p-3 sm:grid-cols-[minmax(0,1fr)_6rem_9rem_auto] sm:border-0 sm:p-0">
                   <div className="col-span-2 sm:col-span-1">
-                    <Controller name={`items.${i}.product`} control={control} rules={{ required: "Choose the product" }}
-                      render={({ field }) => (
-                        <InfiniteSelect {...productPicker} value={field.value} invalid={!!err(`items.${i}.product`)}
-                          onChange={(o) => {
-                            field.onChange(o);
-                            const p = o?.data as ProductRow | undefined;
-                            if (p) setValue(`items.${i}.price`, Number(p.price), { shouldDirty: true });
-                          }}
-                          placeholder="Choose a product" searchPlaceholder="Search products" />
-                      )} />
+                    <div className="flex items-start gap-2">
+                      <div className="min-w-0 flex-1">
+                        <Controller name={`items.${i}.product`} control={control} rules={{ required: "Choose the product" }}
+                          render={({ field }) => (
+                            <InfiniteSelect {...productPicker} value={field.value} invalid={!!err(`items.${i}.product`)}
+                              onChange={(o) => {
+                                field.onChange(o);
+                                const p = o?.data as ProductRow | undefined;
+                                if (p) setValue(`items.${i}.price`, Number(p.price), { shouldDirty: true });
+                              }}
+                              placeholder="Choose a product" searchPlaceholder="Search products" />
+                          )} />
+                      </div>
+                      <Button type="button" icon="pi pi-filter" outlined aria-label="Find the product by inventory type, category and brand" tooltip="Find by category and brand" tooltipOptions={{ position: "top" }}
+                        onClick={() => setFinderFor(i)} />
+                    </div>
                     {err(`items.${i}.product`)?.message && <small className="text-red-600">{err(`items.${i}.product`)?.message}</small>}
                   </div>
                   <Controller name={`items.${i}.quantity`} control={control} rules={{ validate: (v) => (v && v >= 1 ? true : "At least 1") }}
@@ -293,6 +302,15 @@ export default function OrderFormDialog({ visible, onHide, onSaved, editId = nul
         </FormSection>
       </form>
       )}
+      <ProductFinderDialog
+        visible={finderFor !== null}
+        onHide={() => setFinderFor(null)}
+        onPick={(p) => {
+          if (finderFor === null) return;
+          setValue(`items.${finderFor}.product`, { label: p.name, value: String(p.id), data: p }, { shouldDirty: true, shouldValidate: true });
+          setValue(`items.${finderFor}.price`, Number(p.price), { shouldDirty: true });
+        }}
+      />
     </Dialog>
   );
 }

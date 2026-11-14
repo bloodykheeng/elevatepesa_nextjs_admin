@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "primereact/button";
-import axiosAPI from "@/services/axiosApi";
+import { catalogueFields, type CatalogueKeys } from "./catalogue";
 import { describeFilters, type FilterGroup } from "@/components/dashboard/filters/FiltersButton";
 import { useOptions } from "./RecordForm";
 import { choices, modeLabel } from "./parts";
@@ -12,36 +12,25 @@ import { choices, modeLabel } from "./parts";
  * Types, the user, 14 Nov 2026), and its arrows carry them to Orders and Order payments, whose API takes the same
  * keys (pesa_back Order::scopeMatching). An order matches when any of its items does.
  */
-export const ORDER_ITEM_KEYS = ["product", "inventory_type", "product_category", "electronic_category"] as const;
+export const ORDER_ITEM_KEYS = ["inventory_type", "product_category", "category_brand", "product_type", "electronic_category", "electronic_brand", "electronic_type", "product"] as const;
 /** Item filters and the order's own statuses: what the dashboard passes on. */
 export const ORDER_FILTER_KEYS = [...ORDER_ITEM_KEYS, "delivery_status", "payment_status", "payment_mode"];
 /** The product picker keeps the product's name beside its id in the address, for the chip; never sent to the API. */
 export const PRODUCT_LABEL_KEY = "product_label";
 
-const named = (rows: { id: number; name: string }[] | undefined) => (rows ?? []).map((r) => ({ label: r.name, value: String(r.id) }));
+/** The order filters' names for each catalogue level (the API's Order::ITEM_FILTERS). */
+export const ORDER_CATALOGUE_KEYS: CatalogueKeys = {
+  inventoryType: "inventory_type", gasCategory: "product_category", gasBrand: "category_brand", productType: "product_type",
+  electronicCategory: "electronic_category", electronicBrand: "electronic_brand", electronicSeries: "electronic_type",
+};
 
-/** The "What was ordered" group of a Filters dialog. */
+/**
+ * The "What was ordered" group of a Filters dialog, cascading like the old admin: the inventory type first, then only
+ * its side's category, brand and type (or series), and the product last, searched among those (catalogue.ts).
+ */
 export function useOrderItemGroup(): FilterGroup {
   const o = useOptions().data;
-  return {
-    title: "What was ordered",
-    fields: [
-      {
-        type: "picker",
-        key: "product",
-        labelKey: PRODUCT_LABEL_KEY,
-        label: "Product",
-        queryKey: ["products", "picker"],
-        queryFn: ({ page, search }) => axiosAPI.get("/admin/products", { params: { page, per_page: 20, sort: "name", ...(search ? { "filter[search]": search } : {}) } }),
-        mapOption: (p: { id: number; name: string }) => ({ label: p.name, value: String(p.id) }),
-        placeholder: "Any product",
-        searchPlaceholder: "Search products",
-      },
-      { type: "select", key: "inventory_type", label: "Inventory type", options: named(o?.inventory_types), placeholder: "Any inventory type" },
-      { type: "select", key: "product_category", label: "Gas & water category", options: named(o?.product_categories), placeholder: "Any category" },
-      { type: "select", key: "electronic_category", label: "Electronics category", options: named(o?.electronic_categories), placeholder: "Any category" },
-    ],
-  };
+  return { title: "What was ordered", fields: catalogueFields(o, ORDER_CATALOGUE_KEYS, { key: "product", labelKey: PRODUCT_LABEL_KEY }) };
 }
 
 /** The order's own statuses, as the dashboard filters them. */

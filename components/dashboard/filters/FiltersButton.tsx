@@ -14,8 +14,19 @@ import { calendarDate, calendarDay, calendarMoment, pickedMoment, shortDate } fr
 export type FilterValues = Record<string, string>;
 
 export type FilterField =
-  /** One choice from a short fixed list. */
-  | { type: "select"; key: string; label: string; options: { label: string; value: string }[]; placeholder?: string }
+  /**
+   * One choice from a short fixed list. A catalogue cascades top down like the old admin (inventory type › category ›
+   * brand › product): `narrow` keeps only the choices under what is picked above it in the draft, `needs` locks the
+   * field until its parent is picked, `clears` empties the children when it changes, `when` hides it where it does not
+   * apply (electronics fields once Gas & water is the inventory type). `options` stays the whole list, for the chips.
+   */
+  | {
+      type: "select"; key: string; label: string; options: { label: string; value: string }[]; placeholder?: string;
+      narrow?: (draft: FilterValues) => { label: string; value: string }[];
+      needs?: { key: string; placeholder: string };
+      clears?: string[];
+      when?: (draft: FilterValues) => boolean;
+    }
   /** From and To, as two URL keys (moments: a time can be picked). */
   /** `days`: whole days as YYYY-MM-DD (the admin API's Kampala days), no time picker. */
   | { type: "dateRange"; from: string; to: string; label: string; days?: boolean }
@@ -40,6 +51,8 @@ export type FilterField =
       cascade?: (draft: FilterValues) => { queryKey: (string | number | null)[]; queryFn: (params: { page: number; search: string }) => Promise<AxiosResponse> };
       /** Keys emptied when this one changes: a new branch empties its territory and route. */
       clears?: string[];
+      /** Only shown when this returns true for the draft. */
+      when?: (draft: FilterValues) => boolean;
     };
 
 export interface FilterGroup {
@@ -136,11 +149,18 @@ export default function FiltersButton({
   const cleared = Object.fromEntries(filterKeys(groups).map((k) => [k, ""]));
 
   const field = (f: FilterField) => {
+    if (f.type !== "dateRange" && f.when && !f.when(draft)) return null;
     if (f.type === "select") {
+      const locked = !!f.needs && !draft[f.needs.key];
       return (
         <div key={f.key} className="space-y-1.5">
           <label className="block text-sm font-medium text-(--text-primary)">{f.label}</label>
-          <Dropdown value={draft[f.key] || null} options={f.options} onChange={(e) => set({ [f.key]: e.value ?? "" })} placeholder={f.placeholder ?? "Any"} showClear className="w-full" />
+          <Dropdown value={draft[f.key] || null} options={f.narrow ? f.narrow(draft) : f.options} filter={f.options.length > 8}
+            onChange={(e) => {
+              if ((e.value ?? "") === (draft[f.key] ?? "")) return;
+              set({ ...Object.fromEntries((f.clears ?? []).map((k) => [k, ""])), [f.key]: e.value ?? "" });
+            }}
+            placeholder={locked ? f.needs!.placeholder : f.placeholder ?? "Any"} disabled={locked} showClear className="w-full" emptyMessage="Nothing under what is picked above" />
         </div>
       );
     }

@@ -1,5 +1,6 @@
 "use client";
 
+import { PRODUCT_API_KEYS, catalogue, catalogueFields } from "@/components/dashboard/admin/catalogue";
 import { useMemo, useState } from "react";
 import { Button } from "primereact/button";
 import { useQuery } from "@tanstack/react-query";
@@ -16,7 +17,7 @@ import type { ExportColumn } from "@/lib/exportRows";
 import { ugx } from "@/lib/format";
 
 type Row = Product & Record<string, unknown>;
-const FILTER_KEYS = ["status", "inventory_types_id", "category_brands_id", "product_types_id", "electronic_category_id", "electronic_brand_id", "electronic_type_id"];
+const FILTER_KEYS = ["status", "inventory_types_id", "product_category", "category_brands_id", "product_types_id", "electronic_category_id", "electronic_brand_id", "electronic_type_id"];
 
 /**
  * The catalogue the app sells. A product belongs to an inventory type; gas & water products have a
@@ -31,25 +32,16 @@ export default function ProductsList() {
   const shown = viewing.data ?? null;
 
   const opts = options.data;
-  const electronicsId = opts?.inventory_types.find((t) => /electronic/i.test(t.name))?.id;
-  const isElectronic = (v: Record<string, unknown>) => !!electronicsId && Number(v.inventory_types_id) === electronicsId;
+  // The inventory type's side from the API (read from its products), as every filter uses it (catalogue.ts).
+  const isElectronic = (v: Record<string, unknown>) => catalogue(opts).sideOf(v.inventory_types_id as string) === "electronics";
   const isGasWater = (v: Record<string, unknown>) => !!v.inventory_types_id && !isElectronic(v);
-  const pick = (list?: { id: number; name: string }[]) => (list ?? []).map((o) => ({ label: o.name, value: String(o.id) }));
 
+  // Cascading like the old admin: the inventory type, then only its side's category › brand › type or series.
   const filterGroups: FilterGroup[] = [
     { title: "Product", fields: [
-      { type: "select", key: "inventory_types_id", label: "Inventory type", options: pick(opts?.inventory_types), placeholder: "Any type" },
       { type: "select", key: "status", label: "Status", options: [{ label: "Active", value: "active" }, { label: "Inactive", value: "inactive" }], placeholder: "Any status" },
     ] },
-    { title: "Gas & water", fields: [
-      { type: "select", key: "category_brands_id", label: "Brand", options: pick(opts?.category_brands), placeholder: "Any brand" },
-      { type: "select", key: "product_types_id", label: "Product type", options: pick(opts?.product_types), placeholder: "Any product type" },
-    ] },
-    { title: "Electronics", fields: [
-      { type: "select", key: "electronic_category_id", label: "Category", options: pick(opts?.electronic_categories), placeholder: "Any category" },
-      { type: "select", key: "electronic_brand_id", label: "Brand", options: pick(opts?.electronic_brands), placeholder: "Any brand" },
-      { type: "select", key: "electronic_type_id", label: "Series", options: pick(opts?.electronic_types), placeholder: "Any series" },
-    ] },
+    { title: "Where it sits in the catalogue", fields: catalogueFields(opts, PRODUCT_API_KEYS) },
   ];
 
   const sections: Section[] = useMemo(() => [
@@ -72,9 +64,9 @@ export default function ProductsList() {
     ] },
     { title: "Description", fields: [{ name: "details", label: "Details", type: "textarea", hint: "Shown to customers in the app." }] },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [electronicsId]);
+  ], [opts]);
 
-  const placeOf = (p: Product) => (p.inventory_types_id === electronicsId
+  const placeOf = (p: Product) => (catalogue(opts).sideOf(p.inventory_types_id) === "electronics"
     ? [p.electronic_category?.name, p.electronic_brand?.name, p.electronic_type?.name]
     : [p.category_brand?.name, p.product_type?.name]).filter(Boolean).join(" · ") || "-";
 

@@ -57,7 +57,14 @@ export function Pill({ value, label }: { value: string | null | undefined; label
 }
 
 /** A stored photo as a small square, or the name's initials when there is none. */
-export function Thumb({ src, name, size = "h-10 w-10", round = false }: { src: string | null | undefined; name?: string; size?: string; round?: boolean }) {
+export function Thumb({ src, name, size = "h-10 w-10", round = false, preview = true }: {
+  src: string | null | undefined;
+  name?: string;
+  size?: string;
+  round?: boolean;
+  /** False inside something clickable (a picker row): the full-screen viewer brings a button, and a button cannot sit in a button. */
+  preview?: boolean;
+}) {
   const url = photoUrl(src);
   const shape = round ? "rounded-full" : "rounded-lg";
   // A row whose file is missing on the server shows the initials, not a broken-image icon.
@@ -65,6 +72,10 @@ export function Thumb({ src, name, size = "h-10 w-10", round = false }: { src: s
   useEffect(() => setFailed(false), [url]);
   if (!url || failed) {
     return <span className={`flex ${size} ${shape} shrink-0 items-center justify-center bg-(--brand-light) text-xs font-semibold text-(--brand-ink)`}>{initials(name ?? "")}</span>;
+  }
+  if (!preview) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={url} alt={name ?? ""} loading="lazy" onError={() => setFailed(true)} className={`${size} ${shape} shrink-0 border border-(--border-color) bg-white object-cover`} />;
   }
   // Click (or Enter) opens it full screen, with zoom and rotate; Escape closes it.
   return (

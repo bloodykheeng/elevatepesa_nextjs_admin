@@ -61,26 +61,33 @@ export function CustomerDetailsDialog({ id, visible, onHide, actions }: {
         // Two rows, not one band: who they are and how to reach them, then what they ordered and owe, each with room
         // (the one-band version squeezed three pills, two contact lines and three figures together, the user, 14/11/2026).
         <div className="space-y-3">
-          <div className="flex items-center gap-5 rounded-xl border border-(--border-color) p-5">
-            <Thumb src={u.photo_url} name={u.name} size="h-14 w-14" round />
-            <div className="min-w-0 flex-1 space-y-3">
-              <p className="m-0 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-(--text-secondary)">
-                <span className="font-medium text-(--text-primary)">{u.role ?? "No role"}</span>
-                <Pill value={u.status} />
-                {u.has_device && (
-                  <span className="inline-flex items-center gap-1" title="Has the app on a phone: can get push messages"><i className="pi pi-mobile text-xs" aria-hidden />Has the app</span>
-                )}
-              </p>
-              <div className="flex flex-col gap-2 text-sm sm:flex-row sm:flex-wrap sm:gap-x-8">
-                <a href={`mailto:${u.email}`} className="inline-flex min-w-0 items-center gap-2 text-(--text-secondary) no-underline hover:underline">
-                  <i className="pi pi-envelope text-xs text-(--text-muted)" aria-hidden /><span className="truncate">{u.email}</span>
-                </a>
-                {u.phone && (
-                  <a href={`tel:${u.phone}`} className="inline-flex items-center gap-2 text-(--text-secondary) no-underline hover:underline">
-                    <i className="pi pi-phone text-xs text-(--text-muted)" aria-hidden />{u.phone}
-                  </a>
-                )}
+          {/* Three equal columns like the figures under it (the user, 14/11/2026: all on the left looked squeezed):
+              who they are, then how to reach them, each a small label over its value. */}
+          <div className="grid gap-2 sm:grid-cols-3">
+            <div className="flex min-w-0 items-center gap-3 rounded-xl bg-(--bg-page) px-3 py-2.5">
+              <Thumb src={u.photo_url} name={u.name} size="h-11 w-11" round />
+              <div className="min-w-0 space-y-1">
+                <p className="m-0 flex flex-wrap items-center gap-2 text-sm font-semibold text-(--text-primary)">{u.role ?? "No role"} <Pill value={u.status} /></p>
+                <p className="m-0 text-xs text-(--text-muted)">
+                  {u.has_device
+                    ? <span className="inline-flex items-center gap-1" title="Has the app on a phone: can get push messages"><i className="pi pi-mobile text-[11px]" aria-hidden />Has the app</span>
+                    : "No app on a phone"}
+                </p>
               </div>
+            </div>
+            <div className="min-w-0 rounded-xl bg-(--bg-page) px-3 py-2.5">
+              <p className="m-0 text-[11px] font-medium text-(--text-muted)">Email</p>
+              <a href={`mailto:${u.email}`} className="mt-0.5 flex min-w-0 items-center gap-2 text-sm font-semibold text-(--text-primary) no-underline hover:underline">
+                <i className="pi pi-envelope text-xs text-(--text-muted)" aria-hidden /><span className="truncate" title={u.email}>{u.email}</span>
+              </a>
+            </div>
+            <div className="min-w-0 rounded-xl bg-(--bg-page) px-3 py-2.5">
+              <p className="m-0 text-[11px] font-medium text-(--text-muted)">Phone</p>
+              {u.phone ? (
+                <a href={`tel:${u.phone}`} className="mt-0.5 flex items-center gap-2 text-sm font-semibold text-(--text-primary) no-underline hover:underline">
+                  <i className="pi pi-phone text-xs text-(--text-muted)" aria-hidden />{u.phone}
+                </a>
+              ) : <p className="m-0 mt-0.5 text-sm text-(--text-muted)">-</p>}
             </div>
           </div>
           {u.totals && (

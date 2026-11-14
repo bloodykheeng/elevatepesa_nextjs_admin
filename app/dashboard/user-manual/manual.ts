@@ -138,6 +138,7 @@ export const MANUAL: ManualChapter[] = [
             title: "Enter an order",
             body: "Press New to enter an order the customer did not place in the app: one lost when the old hosting lost its data, or one taken over the phone. Choose the customer, when it was placed (leave it empty for now), the address, and each item with its quantity and price (the product's price today; change it if they paid another price then). Set the payment mode, status and delivery, then Enter order. Its details open next, so you can record what was paid.",
             notes: [
+              "Not sure of a product's exact name? The funnel beside it opens Find a product: pick the inventory type, then its category, brand and type (or series), search, and click the product. Each shows its picture, price and stock.",
               "The items come out of stock, as for an app order. Untick Take these items out of stock if the stock count already allows for it.",
               "Nobody is messaged: not the customer, not the admins.",
               "The order shows who entered it (Entered by, in its details and as a column you can switch on), and the audit trail records it.",
@@ -146,7 +147,7 @@ export const MANUAL: ManualChapter[] = [
           },
           {
             title: "Find an order",
-            body: "Search by order number, customer name, phone or address. Orders from 14 Nov 2026 are numbered ORD, the month and year, then a count (ORD1120265: the 5th order of November 2026); older ones keep their earlier numbers. A number is never given to another order, even after a delete. Filters narrow by status, payment, delivery, payment mode, balance and dates; each filter shows as a chip you can clear.",
+            body: "Search by order number, customer name, phone or address. Orders from 14 Nov 2026 are numbered ORD, the month and year, then a count (ORD1120265: the 5th order of November 2026); older ones keep their earlier numbers. A number is never given to another order, even after a delete. Filters narrow by status, payment, delivery, payment mode, balance and dates, and by what was ordered: pick the inventory type first, then only its categories, brands and types (or series) are offered, and the product list shows only what is under them. Each filter shows as a chip you can clear.",
           },
           {
             title: "Edit an order",
