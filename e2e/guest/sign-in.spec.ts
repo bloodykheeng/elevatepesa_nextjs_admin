@@ -49,10 +49,20 @@ test.describe("signing in", () => {
 });
 
 test.describe("reset password page", () => {
-  test("without a code it explains and offers a new link", async ({ page }) => {
+  test("without a code (the app's Forgot password?) it asks for the email and sends a link", async ({ page }) => {
     await page.goto("/reset-password");
-    await expect(page.getByText("This link is missing its reset code.")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Ask for a new link" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Forgot your password?" })).toBeVisible();
+    await page.locator("#email:visible").fill("nobody-here@example.com");
+    await page.getByRole("button", { name: "Send reset link" }).click();
+    await expect(page.getByText("If nobody-here@example.com has an Elevate Pesa account, a reset link is on its way.", { exact: false })).toBeVisible();
+  });
+
+  test("each new password box has its own eye", async ({ page }) => {
+    await page.goto("/reset-password?token=not-a-real-token");
+    await page.locator("#password_confirmation:visible").fill("abc123");
+    await page.getByRole("button", { name: "Show password" }).nth(1).click();
+    await expect(page.locator("#password_confirmation:visible")).toHaveAttribute("type", "text");
+    await expect(page.locator("#password:visible")).toHaveAttribute("type", "password");
   });
 
   test("an expired code is refused with a way out", async ({ page }) => {
@@ -67,6 +77,6 @@ test.describe("reset password page", () => {
     await page.goto("/forgot-password");
     await page.locator("#email:visible").fill("nobody-here@example.com");
     await page.getByRole("button", { name: "Send reset link" }).click();
-    await expect(page.getByText(/If that address belongs to a staff account/)).toBeVisible();
+    await expect(page.getByText(/If nobody-here@example\.com has an Elevate Pesa account/)).toBeVisible();
   });
 });

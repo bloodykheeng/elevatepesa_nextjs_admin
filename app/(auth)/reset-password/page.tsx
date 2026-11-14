@@ -1,21 +1,19 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import AuthShell from "@/components/auth/AuthShell";
-import ResetPasswordForm from "./ResetPasswordForm";
+import ResetPasswordScreen from "./ResetPasswordScreen";
 
-export const metadata: Metadata = { title: "Choose a new password" };
+export const metadata: Metadata = { title: "Reset your password" };
 
 /**
- * Opened from a reset email: /reset-password?token=... Staff links land here, and so does the
- * mobile app's "forgot password" (it opens adb.elevatepesa.com/reset-password), so the address
- * and the `token` parameter must not change. Public, signed in or not.
+ * /reset-password?token=... (from a reset or welcome email): choose a new password.
+ * /reset-password with no token: the mobile app's "Forgot password?" opens exactly this
+ * (adb.elevatepesa.com/reset-password), so it asks for the email and sends a link, for customers and staff.
+ * The address and the `token` parameter must not change. Public, signed in or not.
  */
 export default function ResetPasswordPage() {
   return (
-    <AuthShell title="Choose a new password" subtitle="At least 6 characters.">
-      <Suspense>
-        <ResetPasswordForm />
-      </Suspense>
-    </AuthShell>
+    <Suspense>
+      <ResetPasswordScreen />
+    </Suspense>
   );
 }

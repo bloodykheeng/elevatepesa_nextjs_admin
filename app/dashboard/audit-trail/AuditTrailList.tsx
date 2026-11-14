@@ -28,7 +28,15 @@ const EVENTS = [
   { label: "Signed in", value: "signed_in" },
   { label: "Signed out", value: "signed_out" },
   { label: "Sign-in failed", value: "sign_in_failed" },
+  { label: "Password reset asked", value: "password_reset_requested" },
+  { label: "Password reset", value: "password_reset" },
 ];
+
+const OUTCOME: Record<string, { text: string; cls: string }> = {
+  emailed: { text: "Link emailed", cls: "text-emerald-700 dark:text-emerald-400" },
+  no_account: { text: "No account with that email: nothing sent", cls: "text-amber-700 dark:text-amber-400" },
+  inactive: { text: "Account inactive: nothing sent", cls: "text-amber-700 dark:text-amber-400" },
+};
 
 /** Where a record lives in the admin, opened in its View dialog. Null for one the admin has no page for. */
 const RECORD_PAGE: Record<string, string> = {
@@ -47,7 +55,7 @@ const PEEK_TYPE: Record<string, PeekType> = { Order: "order", Package: "package"
 const KINDS = [
   { label: "Everything", value: "" },
   { label: "Changes to records", value: "changes" },
-  { label: "Sign-ins and sign-outs", value: "sign_ins" },
+  { label: "Sign-ins and passwords", value: "sign_ins" },
 ];
 
 const changeText = (e: AuditEntry) =>
@@ -58,6 +66,11 @@ function ChangedLines({ e }: { e: AuditEntry }) {
   if (e.event === "created") return <span className="text-xs text-(--text-muted)">New record</span>;
   if (e.event === "deleted") return <span className="text-xs text-(--text-muted)">Removed, with everything it held</span>;
   if (e.event === "sign_in_failed") return <span className="text-xs text-amber-700 dark:text-amber-400">Wrong email or password</span>;
+  if (e.event === "password_reset_requested") {
+    const o = OUTCOME[e.outcome ?? ""];
+    return <span className={`text-xs ${o?.cls ?? "text-(--text-muted)"}`}>{e.login}{o ? ` · ${o.text}` : ""}</span>;
+  }
+  if (e.event === "password_reset") return <span className="text-xs text-(--text-muted)">New password saved; every device signed out</span>;
   if (!e.changes_preview?.length) return <span className="text-(--text-muted)">-</span>;
   const more = (e.changed ?? 0) - e.changes_preview.length;
   return (
@@ -87,6 +100,14 @@ export const historyHref = (type: string, id: number | string) => `/dashboard/au
 
 function Who({ e }: { e: AuditEntry }) {
   if (!e.causer) {
+    if (e.login && (e.event === "sign_in_failed" || e.event === "password_reset_requested")) {
+      return (
+        <div className="min-w-0">
+          <p className="m-0 text-(--text-secondary)">Not signed in</p>
+          <p className="m-0 truncate text-xs text-(--text-muted)">typed {e.login}</p>
+        </div>
+      );
+    }
     return <span className="text-(--text-secondary)">{e.source === "system" ? "System" : e.event === "sign_in_failed" ? "Unknown" : "Someone signing up"}</span>;
   }
   return (

@@ -40,6 +40,10 @@ export interface AuditEntry {
   subject_id: number | null;
   causer_id: number | null;
   causer: { name: string | null; email: string | null; role: string | null } | null;
+  /** The address typed on a failed sign-in or a password reset request. */
+  login?: string | null;
+  /** A reset request's result: emailed, no_account, inactive. */
+  outcome?: "emailed" | "no_account" | "inactive" | null;
   source: "admin" | "old-admin" | "app" | "system" | null;
   request_id: string | null;
   changed: number | null;

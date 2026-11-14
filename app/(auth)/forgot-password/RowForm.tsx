@@ -10,7 +10,10 @@ import { Banner, FieldError, apiMessage, inputCls, primaryButtonCls } from "@/co
 
 const schema = z.object({ email: z.string().trim().min(1, "Enter your email").email("Enter a valid email address") });
 
-/** The API answers the same whether or not the address is a staff account, so this does too. */
+/**
+ * Staff and customers alike (the app's "Forgot password?" lands on /reset-password, which shows this).
+ * The API answers the same for every address, naming the one typed so a typo shows.
+ */
 export default function ForgotPasswordRowForm() {
   const [sent, setSent] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +44,7 @@ export default function ForgotPasswordRowForm() {
       {error && <Banner tone="error">{error}</Banner>}
       <div>
         <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-(--text-secondary)">Email</label>
-        <input id="email" type="email" autoComplete="username" autoFocus placeholder="you@elevatepesa.com" className={inputCls(!!errors.email)} {...register("email")} />
+        <input id="email" type="email" autoComplete="username" autoFocus placeholder="you@example.com" className={inputCls(!!errors.email)} {...register("email")} />
         <FieldError msg={errors.email?.message} />
       </div>
       <button type="submit" disabled={send.isPending} className={primaryButtonCls}>

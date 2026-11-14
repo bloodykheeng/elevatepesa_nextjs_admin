@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -20,9 +19,20 @@ const schema = z
 
 type Values = z.infer<typeof schema>;
 
-export default function ResetPasswordForm() {
-  const token = useSearchParams().get("token") ?? "";
+/** Each password box has its own eye, so the repeat can be checked too. */
+function PasswordInput({ id, invalid, autoFocus, ...field }: { id: string; invalid: boolean; autoFocus?: boolean } & ReturnType<ReturnType<typeof useForm<Values>>["register"]>) {
   const [show, setShow] = useState(false);
+  return (
+    <div className="relative">
+      <input id={id} type={show ? "text" : "password"} autoComplete="new-password" autoFocus={autoFocus} className={`${inputCls(invalid)} pr-11`} {...field} />
+      <button type="button" onClick={() => setShow((s) => !s)} aria-label={show ? "Hide password" : "Show password"} className="absolute right-3 top-1/2 -translate-y-1/2 text-lg text-(--text-muted) hover:text-(--text-primary)">
+        {show ? <MdVisibilityOff /> : <MdVisibility />}
+      </button>
+    </div>
+  );
+}
+
+export default function ResetPasswordForm({ token }: { token: string }) {
   const [done, setDone] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { register, handleSubmit, formState: { errors } } = useForm<Values>({ resolver: zodResolver(schema) });
@@ -34,15 +44,6 @@ export default function ResetPasswordForm() {
     onSuccess: (response) => setDone(response.data.message),
     onError: (e) => setError(apiMessage(e)),
   });
-
-  if (!token) {
-    return (
-      <div className="space-y-4 text-center">
-        <Banner tone="error">This link is missing its reset code. Open the link from the email again, or ask for a new one.</Banner>
-        <Link href="/forgot-password" className="text-sm font-semibold text-(--brand-ink) hover:underline">Ask for a new link</Link>
-      </div>
-    );
-  }
 
   if (done) {
     return (
@@ -61,22 +62,17 @@ export default function ResetPasswordForm() {
       {error && (
         <Banner tone="error">
           {error}{" "}
-          {expired && <Link href="/forgot-password" className="font-semibold underline">Ask for a new link</Link>}
+          {expired && <Link href="/reset-password" className="font-semibold underline">Ask for a new link</Link>}
         </Banner>
       )}
       <div>
         <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-(--text-secondary)">New password</label>
-        <div className="relative">
-          <input id="password" type={show ? "text" : "password"} autoComplete="new-password" autoFocus className={`${inputCls(!!errors.password)} pr-11`} {...register("password")} />
-          <button type="button" onClick={() => setShow((s) => !s)} aria-label={show ? "Hide password" : "Show password"} className="absolute right-3 top-1/2 -translate-y-1/2 text-lg text-(--text-muted) hover:text-(--text-primary)">
-            {show ? <MdVisibilityOff /> : <MdVisibility />}
-          </button>
-        </div>
+        <PasswordInput id="password" invalid={!!errors.password} autoFocus {...register("password")} />
         <FieldError msg={errors.password?.message} />
       </div>
       <div>
         <label htmlFor="password_confirmation" className="mb-1.5 block text-sm font-medium text-(--text-secondary)">Repeat the new password</label>
-        <input id="password_confirmation" type={show ? "text" : "password"} autoComplete="new-password" className={inputCls(!!errors.password_confirmation)} {...register("password_confirmation")} />
+        <PasswordInput id="password_confirmation" invalid={!!errors.password_confirmation} {...register("password_confirmation")} />
         <FieldError msg={errors.password_confirmation?.message} />
       </div>
       <button type="submit" disabled={save.isPending} className={primaryButtonCls}>
