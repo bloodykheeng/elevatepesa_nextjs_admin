@@ -356,6 +356,30 @@ export const MANUAL: ManualChapter[] = [
           },
         ],
       },
+      {
+        id: "queues",
+        title: "Queues",
+        summary: "Work done in the background: messages, push messages and emails. What is waiting and what failed.",
+        iconName: "layers",
+        route: "/dashboard/queues",
+        keywords: ["queue", "jobs", "failed", "retry", "background", "worker", "push", "email not sent"],
+        topics: [
+          {
+            title: "What runs in the background",
+            body: "Sending a message to customers, every push message to a phone and every email (welcome, password reset, new order alerts) is handed to the queue, so nobody waits for Firebase or the mail server. The counts at the top refresh on their own: Waiting, Running now and Failed.",
+            warning: "\"Nothing is picking jobs up\" means the queue worker on the server has stopped: messages, pushes and emails wait until it is started again. Tell whoever looks after the server.",
+          },
+          {
+            title: "When something failed",
+            body: "Open Failed to see each job that gave up, when, and why. A push or email is tried three times before it lands here. Open one for the full error, then Retry it once the cause is fixed (the mail server back, for example), or tick several and press Retry.",
+            notes: [
+              "Retrying a message to customers only sends to the people who have not had it yet: nobody gets it twice.",
+              "Delete removes a job for good. Deleting a waiting message stops it where it is.",
+              "Every retry and delete is in the audit trail.",
+            ],
+          },
+        ],
+      },
     ],
   },
 ];

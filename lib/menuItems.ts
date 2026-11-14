@@ -85,6 +85,7 @@ export const menuGroups: NavGroup[] = [
         children: [
           { id: "roles", label: "Roles & access", href: "/dashboard/roles" },
           { id: "audit-trail", label: "Audit trail", href: "/dashboard/audit-trail" },
+          { id: "queues", label: "Queues", href: "/dashboard/queues" },
         ],
       },
       { id: "user-manual", label: "User manual", href: "/dashboard/user-manual", iconName: "help" },

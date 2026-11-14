@@ -39,6 +39,7 @@ export const PAGES: { path: string; heading: string }[] = [
   { path: "/dashboard/messages", heading: "Messages to customers" },
   { path: "/dashboard/roles", heading: "Roles & access" },
   { path: "/dashboard/audit-trail", heading: "Audit trail" },
+  { path: "/dashboard/queues", heading: "Queues" },
   { path: "/dashboard/notifications", heading: "Notifications" },
   { path: "/dashboard/profile", heading: "Your profile" },
   { path: "/dashboard/user-manual", heading: "User manual" },
