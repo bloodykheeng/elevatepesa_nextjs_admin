@@ -35,7 +35,7 @@ export const BUSINESS_TIMEZONE = "Africa/Kampala";
 /** An instant from the API (or a Date) on the business clock, or null. */
 export function onBusinessClock(value: string | Date | null | undefined, zone: string = BUSINESS_TIMEZONE): DateTime | null {
   if (!value) return null;
-  // Columns the API does not cast (users.lastlogin) come as MySQL text, "2025-12-14 20:08:50", in UTC.
+  // MySQL text with no zone ("2025-12-14 20:08:50") is UTC: every column is cast now, this is a safety net.
   const sql = typeof value === "string" && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?$/.test(value);
   const dt = value instanceof Date
     ? DateTime.fromJSDate(value)
@@ -86,6 +86,32 @@ export function calendarDate(value: string | null | undefined): Date | null {
   const day = /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : businessDay(value);
   const dt = DateTime.fromISO(day);
   return dt.isValid ? dt.toJSDate() : null;
+}
+
+/**
+ * An instant from the API as the Date a time-picking Calendar shows: its Kampala wall-clock as the browser's local
+ * time, so a laptop set to another zone still shows the Kampala time.
+ */
+export function calendarMoment(value: string | null | undefined): Date | null {
+  const dt = onBusinessClock(value);
+  if (!dt) return null;
+  return DateTime.fromObject({ year: dt.year, month: dt.month, day: dt.day, hour: dt.hour, minute: dt.minute, second: dt.second }).toJSDate();
+}
+
+/**
+ * What a time-picking Calendar's change means, as an instant to send ("...Z"): the picked wall-clock read on the
+ * Kampala clock. Picking a new DAY snaps to its start (a "from") or its end (a "to"), so "to 5 Nov" never drops the
+ * 5th; changing only the time keeps the time, so 1 pm to 3 pm stays 1 pm to 3 pm (docs/timezones.md, NICE's rule).
+ */
+export function pickedMoment(picked: Date, previous: string | null | undefined, edge: "start" | "end"): string {
+  const local = DateTime.fromJSDate(picked);
+  let dt = DateTime.fromObject(
+    { year: local.year, month: local.month, day: local.day, hour: local.hour, minute: local.minute, second: local.second },
+    { zone: BUSINESS_TIMEZONE },
+  );
+  const before = onBusinessClock(previous);
+  if (!before || !before.hasSame(dt, "day")) dt = edge === "start" ? dt.startOf("day") : dt.endOf("day");
+  return dt.toUTC().toISO() ?? "";
 }
 
 /** Today on the business clock, n years back, as a Calendar's Date (a date of birth's limits). */

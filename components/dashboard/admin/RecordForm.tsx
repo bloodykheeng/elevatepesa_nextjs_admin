@@ -160,7 +160,7 @@ export default function RecordForm<T extends { id: number }>({
                 );
               case "date":
                 return (
-                  <Calendar inputId={f.name} value={field.value instanceof Date ? field.value : calendarDate(field.value ? String(field.value).slice(0, 10) : null)}
+                  <Calendar inputId={f.name} value={field.value instanceof Date ? field.value : calendarDate(field.value ? String(field.value) : null)}
                     onChange={(e) => field.onChange(e.value ?? null)} dateFormat="d M yy" showIcon showButtonBar className="w-full" />
                 );
               case "password":

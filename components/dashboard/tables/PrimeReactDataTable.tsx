@@ -15,7 +15,7 @@ import { Checkbox } from "primereact/checkbox";
 import { Tooltip } from "primereact/tooltip";
 import * as XLSX from "xlsx";
 import ExportDialog, { type ExportPageFetcher } from "@/components/dashboard/export/ExportDialog";
-import type { ExportColumn } from "@/lib/exportRows";
+import { asDate, type ExportColumn } from "@/lib/exportRows";
 import {
   FiTrash2,
   FiDownload,
@@ -473,8 +473,8 @@ const PrimeReactDataTable = <T extends DataItem>({
         if (col.exportValue) return col.exportValue(row) ?? "";
         const value = col.field.split(".").reduce((acc: any, part) => acc?.[part], row);
         if (col.type === "date" && value) {
-          const parsed = new Date(String(value));
-          return Number.isNaN(parsed.getTime()) ? String(value) : parsed;
+          // The Kampala wall-clock, as the screen shows it (SheetJS writes a Date's local time).
+          return asDate(String(value)) ?? String(value);
         }
         return exportCell(value);
       },

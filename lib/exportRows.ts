@@ -1,6 +1,7 @@
 import * as XLSX from "xlsx";
 import { fetchAllPaginated } from "./fetchAllPaginated";
 import { exportStamp, safeFilename } from "./exportFilename";
+import { calendarMoment } from "./format";
 
 /**
  * Export a whole filtered list, not just the page on screen.
@@ -99,5 +100,5 @@ export async function exportAll<T>({
   return rows.length;
 }
 
-/** An ISO string as a real Date cell, or blank. */
-export const asDate = (iso: string | null | undefined): Date | null => (iso ? new Date(iso) : null);
+/** An ISO string as a real Date cell on the Kampala clock (SheetJS writes a Date's local wall-clock), or blank. */
+export const asDate = (iso: string | null | undefined): Date | null => calendarMoment(iso);

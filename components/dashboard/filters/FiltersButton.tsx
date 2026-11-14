@@ -8,7 +8,7 @@ import { Dialog } from "@/components/common/Dialog";
 import { Dropdown } from "primereact/dropdown";
 import FilterSection from "@/components/dashboard/forms/FilterSection";
 import InfiniteSelect, { type Option } from "@/components/dashboard/forms/InfiniteSelect";
-import { calendarDate, calendarDay, shortDate } from "@/lib/format";
+import { calendarDate, calendarDay, calendarMoment, pickedMoment, shortDate } from "@/lib/format";
 
 /** Values as the URL holds them: one string per key, "" when unset. */
 export type FilterValues = Record<string, string>;
@@ -172,7 +172,7 @@ export default function FiltersButton({
           {f.days ? (
             <Calendar value={calendarDate(draft[f.from] || null)} onChange={(e) => set({ [f.from]: e.value ? calendarDay(e.value as Date) : "" })} placeholder="Any day" dateFormat="d M yy" showButtonBar showIcon className="w-full" />
           ) : (
-            <Calendar value={draft[f.from] ? new Date(draft[f.from]) : null} onChange={(e) => set({ [f.from]: e.value ? (e.value as Date).toISOString() : "" })} placeholder="Any time" showTime hideOnDateTimeSelect hourFormat="12" showButtonBar showIcon className="w-full" />
+            <Calendar value={calendarMoment(draft[f.from] || null)} onChange={(e) => set({ [f.from]: e.value ? pickedMoment(e.value as Date, draft[f.from], "start") : "" })} placeholder="Any time" showTime hideOnDateTimeSelect hourFormat="12" showButtonBar showIcon className="w-full" />
           )}
         </div>
         <div className="space-y-1.5">
@@ -180,7 +180,7 @@ export default function FiltersButton({
           {f.days ? (
             <Calendar value={calendarDate(draft[f.to] || null)} onChange={(e) => set({ [f.to]: e.value ? calendarDay(e.value as Date) : "" })} placeholder="Any day" dateFormat="d M yy" showButtonBar showIcon className="w-full" />
           ) : (
-            <Calendar value={draft[f.to] ? new Date(draft[f.to]) : null} onChange={(e) => set({ [f.to]: e.value ? (e.value as Date).toISOString() : "" })} placeholder="Any time" showTime hideOnDateTimeSelect hourFormat="12" showButtonBar showIcon className="w-full" />
+            <Calendar value={calendarMoment(draft[f.to] || null)} onChange={(e) => set({ [f.to]: e.value ? pickedMoment(e.value as Date, draft[f.to], "end") : "" })} placeholder="Any time" showTime hideOnDateTimeSelect hourFormat="12" showButtonBar showIcon className="w-full" />
           )}
         </div>
       </React.Fragment>

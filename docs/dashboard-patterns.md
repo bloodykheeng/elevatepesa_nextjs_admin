@@ -54,6 +54,21 @@ unless given `heading`. Every thumbnail (`Thumb`) opens full screen on click (Pr
 
 Saves are multipart `POST /api/admin/<path>/<id>` so a photo can travel with the fields.
 
+## Dates
+
+The rules are the API's (`pesa_back/docs/timezones.md`): UTC on the wire, a day is the Kampala day.
+
+- Show a moment with `dateTime` / `shortDate` / `timeAgo` (`lib/format.ts`): the Kampala clock whatever the laptop
+  says. Never `toLocaleString()` or `new Date(x).getDate()`.
+- Send a whole day as a bare day (`calendarDay`, "2026-11-04"): every list filter is `days: true`, "Pick days" sends
+  days. A Calendar shows one with `calendarDate(value)`, which reads an instant as its Kampala day (never
+  `value.slice(0, 10)`, the UTC date).
+- A field with a time: show with `calendarMoment(iso)`, send `pickedMoment(date, previous, "start" | "end")` (picking a
+  day snaps to its start or end, changing the time keeps it).
+- "Today" is `businessDay(new Date())` / `businessNow()`, never the laptop's date. Exports write dates through
+  `asDate()` (the Kampala wall-clock).
+- Never read the clock when a file loads (a form default frozen at the first import): `npm run check:dates` finds one.
+
 ## The simple tables
 
 `app/dashboard/catalog/[resource]/catalog.tsx` defines the twelve tables the API's `App\Admin\Catalog`

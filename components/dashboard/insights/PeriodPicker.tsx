@@ -5,7 +5,7 @@ import { Button } from "primereact/button";
 import { Calendar } from "primereact/calendar";
 import { Dialog } from "@/components/common/Dialog";
 import { SelectButton } from "primereact/selectbutton";
-import { calendarDate, calendarDay } from "@/lib/format";
+import { businessDay, calendarDate, calendarDay } from "@/lib/format";
 import { QUICK_RANGES, daysIn, lastDayAllowed, periodLabel } from "@/lib/period";
 
 type Mode = "day" | "range";
@@ -35,7 +35,8 @@ export default function PeriodPicker({
   const [mode, setMode] = useState<Mode>("range");
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
-  const today = calendarDay(new Date());
+  // Today on the Kampala calendar, not the laptop's (one set to UTC would still be on yesterday until 3 am).
+  const today = businessDay(new Date());
 
   const start = () => {
     setMode(from && from === to ? "day" : "range");
