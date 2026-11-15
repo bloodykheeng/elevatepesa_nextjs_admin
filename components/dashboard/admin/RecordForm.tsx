@@ -5,6 +5,7 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
+import { Password } from "primereact/password";
 import { InputTextarea } from "primereact/inputtextarea";
 import { InputNumber } from "primereact/inputnumber";
 import { Dropdown } from "primereact/dropdown";
@@ -183,7 +184,9 @@ export default function RecordForm<T extends { id: number }>({
                     onChange={(e) => field.onChange(e.value ?? null)} dateFormat="d M yy" showIcon showButtonBar className="w-full" />
                 );
               case "password":
-                return <InputText id={f.name} type="password" autoComplete="new-password" value={String(field.value ?? "")} onChange={(e) => field.onChange(e.target.value)} className="w-full" />;
+                // Each password box has its own eye (the user, 16 Nov 2026), like the profile page's.
+                return <Password inputId={f.name} autoComplete="new-password" value={String(field.value ?? "")} onChange={(e) => field.onChange(e.target.value)}
+                  feedback={false} toggleMask className="w-full" inputClassName="w-full" invalid={!!err} />;
               case "customer":
                 return <InfiniteSelect {...customerPicker} value={field.value as Option | null} onChange={field.onChange} invalid={!!err}
                   placeholder="Choose the customer" searchPlaceholder="Name, phone or email" />;
