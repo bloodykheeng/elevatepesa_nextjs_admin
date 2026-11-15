@@ -15,6 +15,14 @@ const eslintConfig = defineConfig([
       "react-hooks/set-state-in-effect": "off",
     },
   },
+  // Node scripts written as CommonJS (.cjs, run with `node`, e.g. scripts/find-load-time-dates.cjs): require() is how
+  // they import, so the TypeScript rule against it does not apply to them.
+  {
+    files: ["**/*.cjs"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

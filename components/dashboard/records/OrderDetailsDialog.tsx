@@ -8,7 +8,7 @@ import { adminApi } from "@/services/admin";
 import { dateTime, ugx } from "@/lib/format";
 import type { Order } from "@/services/types/pesa";
 import { PeekLink } from "./peek";
-import { DetailsFooter, PaymentsSection, StatTile, n, type PaymentActions } from "./shared";
+import { DetailsFooter, PaymentsSection, StatTile, n, placedBy, type PaymentActions } from "./shared";
 
 /**
  * One order: who ordered, where it stands, its items and payments. The Orders page opens it with its own buttons
@@ -34,7 +34,7 @@ export function OrderDetailsDialog({ id, visible, onHide, actions, payments }: {
       visible={visible}
       onHide={onHide}
       record={o}
-      people={false}
+      creator={o ? placedBy(o, "Placed by") : undefined}
       width="min(48rem, 95vw)"
       loading={q.isPending}
       error={viewError(q, "order")}
@@ -56,7 +56,6 @@ export function OrderDetailsDialog({ id, visible, onHide, actions, payments }: {
           ) : "-",
         },
         { label: "Placed", value: dateTime(o.created_at) },
-        ...(o.entered_by ? [{ label: "Entered by", value: `${o.entered_by.name}, from the dashboard` }] : []),
         { label: "Status", value: <Pill value={o.status} /> },
         { label: "Delivery", value: <Pill value={o.delivery_status} /> },
         { label: "Payment", value: <span className="flex flex-wrap items-center gap-2"><Pill value={o.payment_status} /> {modeLabel(o.payment_mode)}</span> },

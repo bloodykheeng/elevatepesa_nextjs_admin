@@ -8,7 +8,7 @@ import { adminApi } from "@/services/admin";
 import { dateTime, ugx } from "@/lib/format";
 import type { Package } from "@/services/types/pesa";
 import { PeekLink } from "./peek";
-import { DetailsFooter, PaymentsSection, StatTile, n, type PaymentActions } from "./shared";
+import { DetailsFooter, PaymentsSection, StatTile, n, placedBy, type PaymentActions } from "./shared";
 
 /** One package delivery: the customer, the route, where it stands, its payments. */
 export function PackageDetailsDialog({ id, visible, onHide, actions, payments }: {
@@ -30,7 +30,7 @@ export function PackageDetailsDialog({ id, visible, onHide, actions, payments }:
       visible={visible}
       onHide={onHide}
       record={p}
-      people={false}
+      creator={p ? placedBy(p, "Booked by") : undefined}
       width="min(48rem, 95vw)"
       loading={q.isPending}
       error={viewError(q, "package")}
@@ -53,7 +53,6 @@ export function PackageDetailsDialog({ id, visible, onHide, actions, payments }:
           ) : "-",
         },
         { label: "Booked", value: dateTime(p.created_at) },
-        ...(p.entered_by ? [{ label: "Entered by", value: `${p.entered_by.name}, from the dashboard` }] : []),
         { label: "Pickup", value: p.pickup ?? "-" },
         { label: "Destination", value: p.destination ?? "-" },
         { label: "Status", value: <Pill value={p.status} /> },

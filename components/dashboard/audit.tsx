@@ -100,12 +100,19 @@ export function auditColumns<T extends Audited>({ people = true, updated = true,
 // A record whose relation was not loaded carries the bare id (a number): that is no person to show.
 const person = (user?: UserReference | null) => (user && typeof user === "object" && user.name ? `${user.name}${user.email ? ` · ${user.email}` : ""}` : "N/A");
 
+/** Who made a record, in the record's own words where "Created by" would mislead: an order's `created_by` is the
+ * customer, so its dialog says "Placed by: Jane, in the app" or "Placed by: Sam (staff), from the dashboard". */
+export interface AuditCreator {
+  label: string;
+  value: string;
+}
+
 /** The audit block at the foot of a details dialog: who first (created by, updated by), the dates under. */
-export function AuditDetails({ record, people = true }: { record: Audited; people?: boolean }) {
+export function AuditDetails({ record, people = true, creator }: { record: Audited; people?: boolean; creator?: AuditCreator }) {
   const cells: [string, string][] = [
     ...(people
       ? ([
-          ["Created by", person(record.created_by)],
+          creator ? [creator.label, creator.value] : ["Created by", person(record.created_by)],
           ["Updated by", person(record.updated_by)],
         ] as [string, string][])
       : []),
@@ -143,6 +150,7 @@ export function RecordDetailsDialog({
   record,
   fields,
   people = true,
+  creator,
   children,
   links,
   footer,
@@ -161,6 +169,8 @@ export function RecordDetailsDialog({
   fields: DetailField[];
   /** False for records written by no signed-in person, which have no creator account. */
   people?: boolean;
+  /** The first person in the audit block in the record's own words (an order's "Placed by"). */
+  creator?: AuditCreator;
   /** Anything below the fields and above the audit block (a list, a message). */
   children?: React.ReactNode;
   /** Links to the records this one belongs with, above the fields (a visit's client and KYC). */
@@ -231,7 +241,7 @@ export function RecordDetailsDialog({
             </dl>
           </div>
           {children}
-          <AuditDetails record={record} people={people} />
+          <AuditDetails record={record} people={people} creator={creator} />
           {history && role === "Admin" && (
             <Link href={`/dashboard/audit-trail?subject_type=${history.type}&subject_id=${history.id}`} onClick={onHide}
               className="inline-flex items-center gap-1.5 text-sm font-medium text-(--brand-ink)">

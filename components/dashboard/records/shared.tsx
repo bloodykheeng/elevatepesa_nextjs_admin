@@ -8,10 +8,18 @@ import { Button } from "primereact/button";
 import { adminApi } from "@/services/admin";
 import { methodLabel } from "@/components/dashboard/admin/parts";
 import { dateTime, ugx } from "@/lib/format";
-import type { Payment } from "@/services/types/pesa";
+import type { Audited, Named, Payment } from "@/services/types/pesa";
+import type { AuditCreator } from "@/components/dashboard/audit";
 import { ContextChip, usePeek, type PeekType } from "./peek";
 
 export const n = (v: unknown) => Number(v ?? 0);
+
+/** Who put an order or package in: the staff member who entered it from the dashboard, else the customer in the
+ * app (its `created_by` is always the customer, so "Created by" would say the wrong thing for a staff entry). */
+export function placedBy(record: Audited & { entered_by?: Named | null }, label: string): AuditCreator {
+  if (record.entered_by) return { label, value: `${record.entered_by.name}, from the dashboard` };
+  return { label, value: record.created_by ? `${record.created_by.name}, in the app` : "N/A" };
+}
 
 /** A figure in a summary band: small label over a bold value. */
 export function StatTile({ label, value, tone }: { label: string; value: React.ReactNode; tone?: "red" }) {
