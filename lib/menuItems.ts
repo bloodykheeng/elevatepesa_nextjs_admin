@@ -10,7 +10,7 @@ import type { NavGroup } from "@/types/navigation";
  * parent, and one parent open at a time (AppSidebar), so the menu fits a laptop screen with room to spare. It was
  * sixteen rows with Gas & water setup, Electronics setup and Explore each a parent, and Inventory types (the top
  * level of the whole catalogue, gas and electronics alike) sat under Gas & water. A child's label says whose it
- * is ("Gas & water brands"), since the breadcrumb shows it alone.
+ * is ("Gas brands"), since the breadcrumb shows it alone.
  */
 export const ADMIN_ONLY = ["Admin"];
 
@@ -48,12 +48,12 @@ export const menuGroups: NavGroup[] = [
         iconName: "tag",
         children: [
           { id: "inventory-types", label: "Inventory types", href: "/dashboard/catalog/inventory-types" },
-          { id: "product-categories", label: "Gas & water categories", href: "/dashboard/catalog/product-categories" },
-          { id: "category-brands", label: "Gas & water brands", href: "/dashboard/catalog/category-brands" },
+          { id: "product-categories", label: "Gas categories", href: "/dashboard/catalog/product-categories" },
+          { id: "category-brands", label: "Gas brands", href: "/dashboard/catalog/category-brands" },
           { id: "product-types", label: "Product types", href: "/dashboard/catalog/product-types" },
-          { id: "electronic-categories", label: "Electronics categories", href: "/dashboard/catalog/electronic-categories" },
-          { id: "electronic-brands", label: "Electronics brands", href: "/dashboard/catalog/electronic-brands" },
-          { id: "electronic-types", label: "Electronics series", href: "/dashboard/catalog/electronic-types" },
+          { id: "electronic-categories", label: "Fuel categories", href: "/dashboard/catalog/electronic-categories" },
+          { id: "electronic-brands", label: "Fuel brands", href: "/dashboard/catalog/electronic-brands" },
+          { id: "electronic-types", label: "Fuel types", href: "/dashboard/catalog/electronic-types" },
         ],
       },
       {

@@ -55,8 +55,9 @@ const FILTER_URL_KEYS = [...ORDER_FILTER_KEYS, PRODUCT_LABEL_KEY];
 const NOT_FILTERED = "\n\nThe product and order filters do not change this card: it follows the period only.";
 
 /**
- * The dashboard: All time by default, so it is never empty for want of a recent order (the old one forced the
- * last 30 days and showed zeros). The period and the filters live in the URL, so a reload or Back keeps them.
+ * The dashboard: Today by default (the user, 18 Nov 2026: staff open it to see the day's orders and money; it replaces
+ * the earlier "All time by default"), All time one click away and written in the URL (`preset=all`). The period and the
+ * filters live in the URL, so a reload or Back keeps them.
  * Every figure opens the list it counts, filtered the same way (the arrow at its corner), and says how it is
  * worked out behind its (i) (NICE's help overlays, the user, 14 Nov 2026).
  */
@@ -68,9 +69,13 @@ export default function DashboardHome() {
   const statusGroup = useOrderStatusGroup();
   const filterGroups = [itemGroup, statusGroup];
 
-  const from = params.get("from") ?? undefined;
-  const to = params.get("to") ?? undefined;
-  const preset = (params.get("preset") as Preset | null) ?? (from || to ? null : "all");
+  // No period in the address: today, the default. All time is `preset=all`; picked days are from/to without a preset.
+  const named = params.get("preset") as Preset | null;
+  const picked = params.has("from") || params.has("to");
+  const preset: Preset | null = named ?? (picked ? null : "today");
+  const fallback = !named && !picked ? rangeOf("today") : {};
+  const from = params.get("from") ?? fallback.from;
+  const to = params.get("to") ?? fallback.to;
   const filters = Object.fromEntries(FILTER_URL_KEYS.map((k) => [k, params.get(k) ?? ""]));
   const filtersKey = JSON.stringify(filters);
   const filterText = describeFilters(filterGroups, filters);
@@ -79,7 +84,7 @@ export default function DashboardHome() {
   const push = (next: { preset?: Preset | null; from?: string; to?: string; filters?: Record<string, string> }) => {
     const q = new URLSearchParams();
     const p = next.preset === undefined ? preset : next.preset;
-    if (p && p !== "all") q.set("preset", p);
+    if (p) q.set("preset", p);
     const range = next.preset ? rangeOf(next.preset) : next.preset === null ? { from: next.from, to: next.to } : { from, to };
     if (range.from) q.set("from", range.from);
     if (range.to) q.set("to", range.to);
@@ -164,7 +169,8 @@ export default function DashboardHome() {
     <div className="space-y-5">
       <PageHeader
         title="Dashboard"
-        subtitle={d?.data_range.last_order ? `Orders from ${shortDate(d.data_range.first_order)} to ${shortDate(d.data_range.last_order)}.` : undefined}
+        // The span of all the data, for All time only: any other period has its own date line under the buttons.
+        subtitle={allTime && d?.data_range.last_order ? `Orders from ${shortDate(d.data_range.first_order)} to ${shortDate(d.data_range.last_order)}.` : undefined}
       />
 
       <div className="flex flex-wrap items-center gap-2">

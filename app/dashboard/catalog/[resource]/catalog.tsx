@@ -30,6 +30,9 @@ export type CatalogDef = {
   /** Shown first in the row, beside the picture. */
   nameField: string;
   columns: CatalogColumn[];
+  /** A product-setup list: active records only until the Status filter asks for inactive ones (hidden in the app) or
+   * any (the user, 18 Nov 2026). */
+  activeByDefault?: boolean;
   /** Exact-value filters: [API filter key, label, options key in /admin/options or fixed values]. */
   filters: { key: string; label: string; optionsKey?: keyof Options; values?: string[] }[];
   sections: Section[];
@@ -57,9 +60,10 @@ const inUse = "Ones still in use are kept: make them inactive instead.";
 
 export const CATALOG: Record<string, CatalogDef> = {
   "inventory-types": {
+    activeByDefault: true,
     title: "Inventory types",
     singular: "inventory type",
-    subtitle: "The top level of the catalogue: gas & water, electronics. Every product has one.",
+    subtitle: "The top level of the catalogue: gas (Elevate Pesa and other brands) and fuel. Every product has one. Inactive ones, and everything under them, are hidden in the app.",
     searchPlaceholder: "Name, code or details",
     photo: {},
     nameField: "name",
@@ -73,9 +77,10 @@ export const CATALOG: Record<string, CatalogDef> = {
     deleteNote: inUse,
   },
   "product-categories": {
+    activeByDefault: true,
     title: "Categories",
     singular: "category",
-    subtitle: "Gas and water categories. Each holds brands.",
+    subtitle: "Gas categories (Elevate Pesa gas, other brands). Each holds brands. Inactive ones, and their brands and products, are hidden in the app.",
     searchPlaceholder: "Name, code or details",
     photo: {},
     nameField: "name",
@@ -90,9 +95,10 @@ export const CATALOG: Record<string, CatalogDef> = {
     deleteNote: "Categories with brands are kept: deleting one would take its brands and their products with it.",
   },
   "category-brands": {
+    activeByDefault: true,
     title: "Brands",
     singular: "brand",
-    subtitle: "Gas and water brands, each in a category.",
+    subtitle: "Gas brands, each in a category. Inactive ones, and their products, are hidden in the app; a brand on past orders is made inactive, not deleted.",
     searchPlaceholder: "Name, code or details",
     photo: {},
     nameField: "name",
@@ -111,9 +117,10 @@ export const CATALOG: Record<string, CatalogDef> = {
     deleteNote: "Brands with products are kept: deleting one would delete its products too.",
   },
   "product-types": {
+    activeByDefault: true,
     title: "Product types",
     singular: "product type",
-    subtitle: "Gas and water product types (cylinder sizes, refills...).",
+    subtitle: "Gas product types (refilling, new purchase, accessories...). Inactive ones, and their products, are hidden in the app.",
     searchPlaceholder: "Name, code or details",
     photo: {},
     nameField: "name",
@@ -128,9 +135,10 @@ export const CATALOG: Record<string, CatalogDef> = {
     deleteNote: "Types with products are kept: deleting one would delete its products too.",
   },
   "electronic-categories": {
-    title: "Electronic categories",
-    singular: "electronic category",
-    subtitle: "Phones, TVs, fridges... Each holds brands.",
+    activeByDefault: true,
+    title: "Fuel categories",
+    singular: "fuel category",
+    subtitle: "Fuel categories. Each holds fuel brands. Inactive ones, and everything under them, are hidden in the app.",
     searchPlaceholder: "Name, code or details",
     photo: {},
     nameField: "name",
@@ -145,15 +153,16 @@ export const CATALOG: Record<string, CatalogDef> = {
     deleteNote: "Categories with brands or products are kept: deleting one would take them with it.",
   },
   "electronic-brands": {
-    title: "Electronic brands",
-    singular: "electronic brand",
-    subtitle: "Samsung, Tecno, Hisense... each in an electronic category.",
+    activeByDefault: true,
+    title: "Fuel brands",
+    singular: "fuel brand",
+    subtitle: "Fuel brands (Shell Stations...), each in a fuel category. Inactive ones, and their types and products, are hidden in the app.",
     searchPlaceholder: "Name, code or details",
     photo: {},
     nameField: "name",
     columns: [
       { field: "electronic_category", header: "Category", body: rel("electronic_category"), exportValue: rel("electronic_category") as (r: Row) => string },
-      { field: "types_count", header: "Series", sortable: true, body: count("types_count") },
+      { field: "types_count", header: "Types", sortable: true, body: count("types_count") },
       { field: "products_count", header: "Products", sortable: true, body: count("products_count") },
       { field: "status", header: "Status", sortable: true, body: status, exportValue: (r) => String(r.status) },
     ],
@@ -162,12 +171,13 @@ export const CATALOG: Record<string, CatalogDef> = {
       { key: "status", label: "Status", values: ["active", "inactive"] },
     ],
     sections: [{ title: "Where it belongs", fields: [{ name: "electronic_categories_id", label: "Category", type: "select", optionsKey: "electronic_categories", required: true }] }, basics()],
-    view: (r) => [{ label: "Category", value: rel("electronic_category")(r) }, { label: "Series", value: count("types_count")(r) }, { label: "Products", value: count("products_count")(r) }, { label: "Status", value: status(r) }, { label: "Details", value: String(r.details ?? "-"), wide: true }],
-    deleteNote: "Brands with series or products are kept.",
+    view: (r) => [{ label: "Category", value: rel("electronic_category")(r) }, { label: "Types", value: count("types_count")(r) }, { label: "Products", value: count("products_count")(r) }, { label: "Status", value: status(r) }, { label: "Details", value: String(r.details ?? "-"), wide: true }],
+    deleteNote: "Brands with types or products are kept: make them inactive instead.",
   },
   "electronic-types": {
-    title: "Electronic series",
-    singular: "series",
+    activeByDefault: true,
+    title: "Fuel types",
+    singular: "fuel type",
     subtitle: "Models or ranges under a brand: Tecno Pop, Itel A70... Products are listed under one.",
     searchPlaceholder: "Name, code or details",
     photo: {},
@@ -183,7 +193,7 @@ export const CATALOG: Record<string, CatalogDef> = {
     ],
     sections: [{ title: "Where it belongs", fields: [{ name: "electronic_brands_id", label: "Brand", type: "select", optionsKey: "electronic_brands", required: true }] }, basics()],
     view: (r) => [{ label: "Brand", value: rel("electronic_brand")(r) }, { label: "Products", value: count("products_count")(r) }, { label: "Status", value: status(r) }, { label: "Details", value: String(r.details ?? "-"), wide: true }],
-    deleteNote: "Series with products are kept.",
+    deleteNote: "Types with products are kept: make them inactive instead.",
   },
   ads: {
     title: "Adverts",

@@ -116,12 +116,12 @@ export const MANUAL: ManualChapter[] = [
         topics: [
           {
             title: "Reading the dashboard",
-            body: "It opens on All time. Pick Today, Last 30 days, This month, This year, or Pick days (at the right) for any range. Each card's small arrow (shown when you point at the card) opens the list behind the figure, with the same period and filters, so the list counts the same rows. The (i) beside a card's name says how its figure is worked out.",
+            body: "It opens on Today: the day's orders, money and new customers. Pick All time, Last 30 days, This month, This year, or Pick days (at the right) for any range; the page remembers your choice in its address. The line under the title gives the span of all the data on All time. Each card's small arrow (shown when you point at the card) opens the list behind the figure, with the same period and filters, so the list counts the same rows. The (i) beside a card's name says how its figure is worked out.",
             notes: ["Cancelled orders are left out of values, paid and balances, but counted in Orders.", "Days are Kampala days.", "On All time the customers card counts every customer; with a period, only those who joined in it."],
           },
           {
             title: "Filter by product, category or status",
-            body: "Filters (beside Pick days) narrows the order figures to orders with a product, an inventory type, a gas and water category or an electronics category, and by delivery, payment or mode. An order counts when any of its items matches. The line under the period buttons says what is in force; Clear goes back to everything.",
+            body: "Filters (beside Pick days) narrows the order figures to orders with a product, an inventory type, a gas category or a fuel category, and by delivery, payment or mode. An order counts when any of its items matches. The line under the period buttons says what is in force; Clear goes back to everything.",
             notes: ["Packages, package payments and customers follow the period only: their (i) says so while a filter is on."],
           },
         ],
@@ -138,7 +138,7 @@ export const MANUAL: ManualChapter[] = [
             title: "Enter an order",
             body: "Press New to enter an order the customer did not place in the app: one lost when the old hosting lost its data, or one taken over the phone. Choose the customer, when it was placed (leave it empty for now), the address, and each item with its quantity and price (the product's price today; change it if they paid another price then). Set the payment mode, status and delivery, then Enter order. Its details open next, so you can record what was paid.",
             notes: [
-              "Not sure of a product's exact name? The funnel beside it opens Find a product: pick the inventory type, then its category, brand and type (or series), search, and click the product. Each shows its picture, price and stock.",
+              "Not sure of a product's exact name? The funnel beside it opens Find a product: pick the inventory type, then its category, brand and type (gas) or fuel category, brand and type (fuel), search, and click the product. Inactive products show \"(inactive)\": they are hidden in the app but can still go on an order you are entering. Each shows its picture, price and stock.",
               "The items come out of stock, as for an app order. Untick Take these items out of stock if the stock count already allows for it.",
               "Nobody is messaged: not the customer, not the admins.",
               "The order shows who entered it (Entered by, in its details and as a column you can switch on), and the audit trail records it.",
@@ -223,7 +223,7 @@ export const MANUAL: ManualChapter[] = [
         topics: [
           {
             title: "Add a product",
-            body: "Press New. Pick the inventory type (gas & water, or electronics) first: the form then asks for its brand and, for gas & water, its product type, or for electronics, its series. A photo is required, since the app shows every product with its picture.",
+            body: "Press New. Pick the inventory type (gas, or fuel) first: the form then asks for its gas category, brand and product type, or its fuel category, brand and type. A photo is required, since the app shows every product with its picture. A product you no longer sell but that is on past orders cannot be deleted: set its Status to Inactive. It disappears from the app and from this list (the Status filter brings it back: Inactive, or Any status).",
             notes: ["The photo shows as a preview before you save. When editing, the current photo shows; choose another to replace it, or Remove."],
           },
           {
@@ -235,14 +235,14 @@ export const MANUAL: ManualChapter[] = [
       {
         id: "setup",
         title: "Categories, brands and types",
-        summary: "The lists products are sorted by (Product setup in the menu): inventory types, then gas & water and electronics.",
+        summary: "The lists products are sorted by (Product setup in the menu): inventory types, then gas (categories, brands, product types) and fuel (categories, brands, types).",
         iconName: "tag",
         route: "/dashboard/catalog/product-categories",
         keywords: ["category", "brand", "type", "series", "model", "inventory type", "electronics"],
         topics: [
           {
             title: "Keep them tidy",
-            body: "Each list works the same: search, filter, View, Edit, New, and tick to delete. Electronics go category, then brand, then series (a model range like Tecno Pop or Itel A70); a brand's Series and Products columns count what is under it. Click any picture to see it full screen.",
+            body: "Each list works the same: search, filter, View, Edit, New, and tick to delete. Fuel goes category, then brand (Shell Stations...), then type; a brand's Types and Products columns count what is under it. Lists show active records only: Inactive ones are hidden in the app, and so is everything under them (an inactive brand hides its products), and the Status filter shows them again. Something on past orders cannot be deleted: make it inactive. Click any picture to see it full screen.",
             warning: "Something still in use cannot be deleted: a category with brands, a brand with products. Make it Inactive instead. (The database would otherwise delete everything under it.)",
           },
         ],

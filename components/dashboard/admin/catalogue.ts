@@ -76,19 +76,19 @@ export function catalogueFields(o: Options | undefined, keys: CatalogueKeys, pro
       type: "select", key: k.inventoryType, label: "Inventory type", options: c.inventoryTypes, placeholder: "Any inventory type",
       clears: below(k.gasCategory, k.gasBrand, k.productType, k.electronicCategory, k.electronicBrand, k.electronicSeries),
     },
-    { type: "select", key: k.gasCategory, label: "Gas & water category", options: c.gasCategories, placeholder: "Any category", when: gasWater, clears: below(k.gasBrand) },
+    { type: "select", key: k.gasCategory, label: "Gas category", options: c.gasCategories, placeholder: "Any category", when: gasWater, clears: below(k.gasBrand) },
     {
-      type: "select", key: k.gasBrand, label: "Gas & water brand", options: c.gasBrands(), placeholder: "Any brand", when: gasWater,
+      type: "select", key: k.gasBrand, label: "Gas brand", options: c.gasBrands(), placeholder: "Any brand", when: gasWater,
       narrow: (d) => c.gasBrands(d[k.gasCategory] || null), clears: below(),
     },
     { type: "select", key: k.productType, label: "Product type", options: c.productTypes, placeholder: "Any product type", when: gasWater, clears: below() },
-    { type: "select", key: k.electronicCategory, label: "Electronics category", options: c.electronicCategories, placeholder: "Any category", when: electronics, clears: below(k.electronicBrand, k.electronicSeries) },
+    { type: "select", key: k.electronicCategory, label: "Fuel category", options: c.electronicCategories, placeholder: "Any category", when: electronics, clears: below(k.electronicBrand, k.electronicSeries) },
     {
-      type: "select", key: k.electronicBrand, label: "Electronics brand", options: c.electronicBrands(), placeholder: "Any brand", when: electronics,
+      type: "select", key: k.electronicBrand, label: "Fuel brand", options: c.electronicBrands(), placeholder: "Any brand", when: electronics,
       narrow: (d) => c.electronicBrands(d[k.electronicCategory] || null), clears: below(k.electronicSeries),
     },
     {
-      type: "select", key: k.electronicSeries, label: "Series", options: c.electronicSeries(), placeholder: "Any series", when: electronics,
+      type: "select", key: k.electronicSeries, label: "Fuel type", options: c.electronicSeries(), placeholder: "Any fuel type", when: electronics,
       narrow: (d) => c.electronicSeries(d[k.electronicBrand] || null), clears: below(),
     },
     ...(product ? [{

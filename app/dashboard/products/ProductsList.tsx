@@ -6,6 +6,7 @@ import { Button } from "primereact/button";
 import { useQuery } from "@tanstack/react-query";
 import PrimeReactDataTable, { createAction, deleteSelectedAction, editAction, viewAction } from "@/components/dashboard/tables/PrimeReactDataTable";
 import FiltersButton, { filterValuesFrom, type FilterGroup } from "@/components/dashboard/filters/FiltersButton";
+import { ACTIVE_BY_DEFAULT, STATUS_FILTER } from "@/components/dashboard/admin/useAdminList";
 import { RecordDetailsDialog, auditColumns, auditExportColumns } from "@/components/dashboard/audit";
 import { PageHeader } from "@/components/dashboard/ui";
 import RecordForm, { useOptions, type Section } from "@/components/dashboard/admin/RecordForm";
@@ -26,7 +27,8 @@ const FILTER_KEYS = ["status", "inventory_types_id", "product_category", "catego
  */
 export default function ProductsList() {
   const options = useOptions();
-  const list = useAdminList<Product>({ path: "products", filterKeys: FILTER_KEYS });
+  // Active only until the Status filter asks for inactive ones or any (the user, 18 Nov 2026).
+  const list = useAdminList<Product>({ path: "products", filterKeys: FILTER_KEYS, filterDefaults: ACTIVE_BY_DEFAULT });
   const [editing, setEditing] = useState<{ row: Row | null } | null>(null);
   const viewing = useQuery({ queryKey: ["products", "one", list.viewId], queryFn: () => one<Product>("products", list.viewId), enabled: !!list.viewId, meta: VIEW_META });
   const shown = viewing.data ?? null;
@@ -39,7 +41,7 @@ export default function ProductsList() {
   // Cascading like the old admin: the inventory type, then only its side's category › brand › type or series.
   const filterGroups: FilterGroup[] = [
     { title: "Product", fields: [
-      { type: "select", key: "status", label: "Status", options: [{ label: "Active", value: "active" }, { label: "Inactive", value: "inactive" }], placeholder: "Any status" },
+      { type: "select", key: "status", label: "Status", options: STATUS_FILTER, placeholder: "Active only" },
     ] },
     { title: "Where it sits in the catalogue", fields: catalogueFields(opts, PRODUCT_API_KEYS) },
   ];
@@ -55,12 +57,12 @@ export default function ProductsList() {
       { name: "quantity", label: "Quantity in stock", type: "number", required: true },
     ] },
     { title: "Where it sits in the catalogue", hint: "Pick the inventory type first.", fields: [
-      { name: "product_categories_id", label: "Category", type: "select", optionsKey: "product_categories", when: isGasWater, hint: "Narrows the brands." },
-      { name: "category_brands_id", label: "Brand", type: "select", optionsKey: "category_brands", when: isGasWater, parent: { field: "product_categories_id", key: "product_categories_id" } },
+      { name: "product_categories_id", label: "Gas category", type: "select", optionsKey: "product_categories", when: isGasWater, hint: "Narrows the brands." },
+      { name: "category_brands_id", label: "Gas brand", type: "select", optionsKey: "category_brands", when: isGasWater, parent: { field: "product_categories_id", key: "product_categories_id" } },
       { name: "product_types_id", label: "Product type", type: "select", optionsKey: "product_types", when: isGasWater },
-      { name: "electronic_category_id", label: "Category", type: "select", optionsKey: "electronic_categories", when: isElectronic },
-      { name: "electronic_brand_id", label: "Brand", type: "select", optionsKey: "electronic_brands", when: isElectronic, parent: { field: "electronic_category_id", key: "electronic_categories_id" } },
-      { name: "electronic_type_id", label: "Series", type: "select", optionsKey: "electronic_types", when: isElectronic, parent: { field: "electronic_brand_id", key: "electronic_brands_id" } },
+      { name: "electronic_category_id", label: "Fuel category", type: "select", optionsKey: "electronic_categories", when: isElectronic },
+      { name: "electronic_brand_id", label: "Fuel brand", type: "select", optionsKey: "electronic_brands", when: isElectronic, parent: { field: "electronic_category_id", key: "electronic_categories_id" } },
+      { name: "electronic_type_id", label: "Fuel type", type: "select", optionsKey: "electronic_types", when: isElectronic, parent: { field: "electronic_brand_id", key: "electronic_brands_id" } },
     ] },
     { title: "Description", fields: [{ name: "details", label: "Details", type: "textarea", hint: "Shown to customers in the app." }] },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -109,7 +111,7 @@ export default function ProductsList() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Products" subtitle="What the app sells. Inactive products are hidden from customers; products on past orders cannot be deleted." />
+      <PageHeader title="Products" subtitle="What the app sells. Inactive products are hidden in the app and from this list until the Status filter asks for them; a product on past orders is made inactive, not deleted." />
       <PrimeReactDataTable<Product>
         data={list.rows}
         columns={columns}

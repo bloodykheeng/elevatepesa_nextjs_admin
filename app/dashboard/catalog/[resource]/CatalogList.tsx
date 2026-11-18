@@ -8,7 +8,7 @@ import FiltersButton, { filterValuesFrom, type FilterGroup } from "@/components/
 import { RecordDetailsDialog, auditColumns, auditExportColumns } from "@/components/dashboard/audit";
 import { PageHeader } from "@/components/dashboard/ui";
 import RecordForm, { useOptions } from "@/components/dashboard/admin/RecordForm";
-import { useAdminList } from "@/components/dashboard/admin/useAdminList";
+import { ACTIVE_BY_DEFAULT, STATUS_FILTER, useAdminList } from "@/components/dashboard/admin/useAdminList";
 import { ListSearch, Thumb, choices, VIEW_META, viewError } from "@/components/dashboard/admin/parts";
 import { create, one, update } from "@/services/admin";
 import type { ExportColumn } from "@/lib/exportRows";
@@ -28,7 +28,7 @@ const AUDIT_TYPE: Record<string, string> = {
 export default function CatalogList({ resource }: { resource: string }) {
   const def = CATALOG[resource];
   const options = useOptions();
-  const list = useAdminList<Row>({ path: resource, filterKeys: def.filters.map((f) => f.key) });
+  const list = useAdminList<Row>({ path: resource, filterKeys: def.filters.map((f) => f.key), filterDefaults: def.activeByDefault ? ACTIVE_BY_DEFAULT : undefined });
   const [editing, setEditing] = useState<{ row: Row | null } | null>(null);
 
   const viewing = useQuery({
@@ -45,10 +45,10 @@ export default function CatalogList({ resource }: { resource: string }) {
           type: "select" as const,
           key: f.key,
           label: f.label,
-          placeholder: `Any ${f.label.toLowerCase()}`,
+          placeholder: def.activeByDefault && f.key === "status" ? "Active only" : `Any ${f.label.toLowerCase()}`,
           options: f.optionsKey
             ? ((options.data?.[f.optionsKey] as unknown as { id: number; name: string }[]) ?? []).map((o) => ({ label: o.name, value: String(o.id) }))
-            : choices(f.values ?? []),
+            : def.activeByDefault && f.key === "status" ? STATUS_FILTER : choices(f.values ?? []),
         })),
       }]
     : [];
